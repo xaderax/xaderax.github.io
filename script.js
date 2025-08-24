@@ -59,7 +59,7 @@ const firebaseConfig = {
                         messageDiv.className = 'message ' + type;
                     }
 
-> Roman:
+
 }
 
                 // Функция входа
@@ -141,7 +141,7 @@ const firebaseConfig = {
                 // Функция регистрации
                 function signup() {
 
-> Roman:
+
 console.log("Вызов функции signup");
                     
                     const email = document.getElementById('email').value;
@@ -225,7 +225,7 @@ console.log("Вызов функции signup");
                 function addNewClass(event) {
                     event.preventDefault();
 
-> Roman:
+
 const title = document.getElementById('class-title').value;
                     const description = document.getElementById('class-description').value;
                     const date = document.getElementById('class-date').value;
@@ -304,7 +304,7 @@ const title = document.getElementById('class-title').value;
                     const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
                                        "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
 
-> Roman:
+
 document.getElementById('current-month-year').textContent = monthNames[month] + ' ' + year;
                     
                     const daysContainer = document.getElementById('calendar-days');
@@ -379,7 +379,7 @@ document.getElementById('current-month-year').textContent = monthNames[month] + 
                     const startDate = new Date(year, month, 1);
                     const endDate = new Date(year, month + 1, 0);
 
-> Roman:
+
 console.log("Загрузка занятий с", startDate, "по", endDate);
                     
                     db.collection('classes')
@@ -457,7 +457,7 @@ console.log("Загрузка занятий с", startDate, "по", endDate);
                             
                             const classData = doc.data();
 
-> Roman:
+
 const modalInfo = document.getElementById('modal-class-info');
                             
                             modalInfo.innerHTML = 
@@ -536,7 +536,7 @@ const modalInfo = document.getElementById('modal-class-info');
                 function changeMonth(direction) {
                     currentMonth += direction;
 
-> Roman:
+
 if (currentMonth < 0) {
                         currentMonth = 11;
                         currentYear--;
