@@ -1,3 +1,8 @@
+
+
+
+console.log("Script.js загружен");
+
 // Инициализация Firebase
 
 const firebaseConfig = {
@@ -13,6 +18,8 @@ const firebaseConfig = {
 // Проверка конфигурации
 function initializeFirebase() {
   try {
+    console.log("Попытка инициализации Firebase...");
+    
     // Проверяем, все ли поля заполнены
     const isConfigValid = Object.values(firebaseConfig).every(
       value => value && !value.includes("ваш_")
@@ -39,6 +46,8 @@ function initializeFirebase() {
 
 // Проверка подключения к Firebase
 function testFirebaseConnection() {
+  console.log("Тестирование подключения к Firebase...");
+  
   // Проверяем доступность Firestore
   const db = firebase.firestore();
   db.collection("test").doc("connection").get()
@@ -49,23 +58,32 @@ function testFirebaseConnection() {
   const auth = firebase.auth();
   auth.onAuthStateChanged(user => {
     console.log("Сервис аутентификации доступен");
+    if (user) {
+      console.log("Пользователь уже авторизован:", user.email);
+    } else {
+      console.log("Пользователь не авторизован");
+    }
   });
 }
 
 // Показ сообщений аутентификации
 function showAuthMessage(message, type) {
+  console.log("Показать сообщение:", message, type);
   const messageDiv = document.getElementById('auth-message');
   if (messageDiv) {
     messageDiv.textContent = message;
     messageDiv.className = message ${type};
   }
-  console.log(`[AUTH ${type}] ${message}`);
 }
 
 // Аутентификация
 function login() {
+  console.log("Функция login вызвана");
+  
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
+  
+  console.log("Введенные данные:", {email, password});
   
   if (!email || !password) {
     showAuthMessage("Введите email и пароль", "error");
@@ -76,75 +94,20 @@ function login() {
   
   firebase.auth().signInWithEmailAndPassword(email, password)
     .then((userCredential) => {
+      console.log("Вход выполнен успешно:", userCredential.user);
       showAuthMessage("Вход выполнен успешно!", "success");
-      console.log("Пользователь вошел:", userCredential.user);
     })
     .catch((error) => {
+      console.error("Ошибка входа:", error);
       const errorMessage = getAuthErrorMessage(error.code);
       showAuthMessage('Ошибка входа: ' + errorMessage, "error");
-      console.error("Ошибка входа:", error);
     });
 }
 
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-  console.log("Документ загружен, инициализируем Firebase...");
-  
-  // Инициализируем Firebase
-  if (initializeFirebase()) {
-    // Назначаем обработчики кнопок
-    document.getElementById('login-btn').addEventListener('click', login);
-    document.getElementById('signup-btn').addEventListener('click', signup);
-    
-    // Проверяем состояние аутентификации
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        console.log("Пользователь уже авторизован:", user.email);
-        document.getElementById('auth-container').style.display = 'none';
-        document.getElementById('app-container').style.display = 'block';
-      } else {
-        console.log("Пользователь не авторизован");
-        document.getElementById('auth-container').style.display = 'block';
-        document.getElementById('app-container').style.display = 'none';
-      }
-    });
-  }
-});
-
-// Добавьте остальные функции (signup, logout, etc.) из предыдущего примера
-
-// Инициализация календаря
-function initCalendar() {
-  renderCalendar(currentMonth, currentYear);
-  loadMonthClasses(currentMonth, currentYear);
-}
-
-// Аутентификация
-function login() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  
-  if (!email || !password) {
-    showAuthMessage("Введите email и пароль", "error");
-    return;
-  }
-  
-  showAuthMessage("Выполняется вход...", "success");
-  
-  auth.signInWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      currentUser = userCredential.user;
-      showAuthMessage("Вход выполнен успешно!", "success");
-      checkAuthState();
-    })
-    .catch((error) => {
-      const errorMessage = getAuthErrorMessage(error.code);
-      showAuthMessage('Ошибка входа: ' + errorMessage, "error");
-      console.error("Ошибка входа:", error);
-    });
-}
-
+// Функция регистрации
 function signup() {
+  console.log("Функция signup вызвана");
+  
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
   
@@ -160,10 +123,10 @@ function signup() {
   
   showAuthMessage("Регистрация...", "success");
   
-  auth.createUserWithEmailAndPassword(email, password)
+  firebase.auth().createUserWithEmailAndPassword(email, password)
     .then((userCredential) => {
       // Создаем запись о пользователе в Firestore
-      return db.collection('users').doc(userCredential.user.uid).set({
+      return firebase.firestore().collection('users').doc(userCredential.user.uid).set({
         email: email,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -172,15 +135,12 @@ function signup() {
       showAuthMessage("Регистрация успешна!", "success");
     })
     .catch((error) => {
-      const errorMessage = getAuthErrorMessage(error.code);
-      showAuthMessage('Ошибка регистрации: ' + errorMessage, "error");
       console.error("Ошибка регистрации:", error);
-    });
-}
+      const errorMessage = getAuthErrorMessage(error.code);
 
-function logout() {
-  auth.signOut();
-  showAuthMessage("Вы вышли из системы", "success");
+
+showAuthMessage('Ошибка регистрации: ' + errorMessage, "error");
+    });
 }
 
 // Преобразование кодов ошибок в понятные сообщения
@@ -198,50 +158,29 @@ function getAuthErrorMessage(errorCode) {
   return errorMessages[errorCode] || "Неизвестная ошибка: " + errorCode;
 }
 
-function checkAuthState() {
-  auth.onAuthStateChanged((user) => {
-    if (user) {
-
-> Roman:
-currentUser = user;
-      document.getElementById('auth-container').style.display = 'none';
-      document.getElementById('app-container').style.display = 'block';
-      showAuthMessage("Пользователь аутентифицирован: " + user.email, "success");
-      initCalendar();
-    } else {
-      currentUser = null;
-      document.getElementById('auth-container').style.display = 'block';
-      document.getElementById('app-container').style.display = 'none';
-      showAuthMessage("Вы не авторизованы", "error");
-    }
-  });
-}
-
-// Остальные функции (календарь, занятия, модальное окно) остаются без изменений
-// ...
-
-// Инициализация после загрузки DOM
+// Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
-  // Назначение обработчиков кнопок
+  console.log("DOM загружен, инициализируем приложение...");
+  
+  // Назначаем обработчики кнопок
   document.getElementById('login-btn').addEventListener('click', login);
   document.getElementById('signup-btn').addEventListener('click', signup);
   
-  // Проверка состояния аутентификации
-  checkAuthState();
-  
-  // Закрытие модального окна
-  document.querySelector('.close').addEventListener('click', function() {
-    document.getElementById('booking-modal').style.display = 'none';
-  });
-  
-  // Подтверждение записи
-  document.getElementById('confirm-booking').addEventListener('click', function() {
-    // ... код подтверждения записи
-  });
-  
-  showAuthMessage("Приложение загружено. Готово к работе.", "success");
+  // Инициализируем Firebase
+  if (initializeFirebase()) {
+    // Проверяем состояние аутентификации
+    firebase.auth().onAuthStateChanged((user) => {
+      console.log("Состояние аутентификации изменено:", user);
+      if (user) {
+        console.log("Пользователь авторизован:", user.email);
+        document.getElementById('auth-container').style.display = 'none';
+        document.getElementById('app-container').style.display = 'block';
+      } else {
+        console.log("Пользователь не авторизован");
+        document.getElementById('auth-container').style.display = 'block';
+        document.getElementById('app-container').style.display = 'none';
+      }
+    });
+  }
 });
 
-// Для отладки: выводим информацию о Firebase в консоль
-console.log("Firebase config:", firebaseConfig);
-console.log("Firebase app:", firebase.apps);
