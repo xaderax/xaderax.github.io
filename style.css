@@ -234,3 +234,50 @@
                 font-size: 0.8em;
             }
         }
+.admin-panel {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .admin-panel h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        
+        .admin-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .admin-form .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .admin-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .admin-form input,
+        .admin-form textarea,
+        .admin-form select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .admin-form button {
+            grid-column: 1 / -1;
+            background-color: #28a745;
+        }
+        
+        .admin-form button:hover {
+            background-color: #218838;
+        }
+
