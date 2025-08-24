@@ -1,4 +1,5 @@
-
+// Проверка загрузки скрипта
+console.log("Script.js загружен успешно");
 
 const firebaseConfig = {
   apiKey: "AIzaSyCQTk07tMT8y7tYH0Tcz3xV747rJKBmfIE",
@@ -10,8 +11,7 @@ const firebaseConfig = {
   measurementId: "G-5VYW104YG6"
 }
 
-        // Проверка загрузки скрипта
-        console.log("Script.js загружен успешно");
+    
 
         // Проверка загрузки Firebase
         if (typeof firebase === 'undefined') {
