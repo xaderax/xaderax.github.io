@@ -9,26 +9,27 @@ const firebaseConfig = {
   appId: "1:307286256573:web:3d4ecaf42690e0da2c40d4",
   measurementId: "G-5VYW104YG6"
 }
-// Проверка загрузки скрипта
-        console.log("🚀 Script.js загружен успешно");
+
+        // Проверка загрузки скрипта
+        console.log("Script.js загружен успешно");
 
         // Проверка загрузки Firebase
         if (typeof firebase === 'undefined') {
-            console.error("❌ Firebase не загружен. Проверьте подключение к интернету и CDN ссылки.");
+            console.error("Firebase не загружен. Проверьте подключение к интернету и CDN ссылки.");
             showAuthMessage("Ошибка загрузки Firebase. Проверьте подключение к интернету.", "error");
         } else {
-            console.log("✅ Firebase загружен успешно");
+            console.log("Firebase загружен успешно");
             
             try {
                 // Инициализируем Firebase
                 firebase.initializeApp(firebaseConfig);
-                console.log("✅ Firebase инициализирован успешно");
+                console.log("Firebase инициализирован успешно");
                 
                 // Получаем ссылки на сервисы
                 const auth = firebase.auth();
                 const db = firebase.firestore();
                 
-                console.log("✅ Сервисы Firebase доступны");
+                console.log("Сервисы Firebase доступны");
                 
                 // Переменные
                 let currentUser = null;
@@ -37,35 +38,38 @@ const firebaseConfig = {
                 let currentMonth = new Date().getMonth();
                 let currentYear = new Date().getFullYear();
                 let classesByDate = {};
+                let isAdmin = false;
 
                 // Показ сообщений аутентификации
-                // function showAuthMessage(message, type) {
-                //    console.log(`[AUTH ${type}] ${message}`);
-                //   const messageDiv = document.getElementById('auth-message');
-                //    if (messageDiv) {
-                //        messageDiv.textContent = message;
-                //        messageDiv.className = message ${type};
-                //    }
-                //}
-              // Показ сообщений аутентификации (ИСПРАВЛЕННАЯ ФУНКЦИЯ)
                 function showAuthMessage(message, type) {
                     console.log("[AUTH] " + message + " (" + type + ")");
                     const messageDiv = document.getElementById('auth-message');
                     if (messageDiv) {
                         messageDiv.textContent = message;
-                        // Исправлено: используем конкатенацию вместо шаблонных строк
                         messageDiv.className = 'message ' + type;
                     }
                 }
 
+                // Показ сообщений для администратора
+                function showAdminMessage(message, type) {
+                    console.log("[ADMIN] " + message + " (" + type + ")");
+                    const messageDiv = document.getElementById('admin-message');
+                    if (messageDiv) {
+                        messageDiv.textContent = message;
+                        messageDiv.className = 'message ' + type;
+                    }
+
+> Roman:
+}
+
                 // Функция входа
                 function login() {
-                    console.log("🔐 Вызов функции login");
+                    console.log("Вызов функции login");
                     
                     const email = document.getElementById('email').value;
                     const password = document.getElementById('password').value;
                     
-                    console.log("Введенные данные:", {email, password});
+                    console.log("Введенные данные:", {email: email, password: password});
                     
                     if (!email || !password) {
                         showAuthMessage("Введите email и пароль", "error");
@@ -75,13 +79,16 @@ const firebaseConfig = {
                     showAuthMessage("Выполняется вход...", "success");
                     
                     auth.signInWithEmailAndPassword(email, password)
-                        .then((userCredential) => {
-                            console.log("✅ Вход выполнен успешно:", userCredential.user);
+                        .then(function(userCredential) {
+                            console.log("Вход выполнен успешно:", userCredential.user);
                             showAuthMessage("Вход выполнен успешно!", "success");
+                            
+                            // Проверяем, является ли пользователь администратором
+                            checkAdminStatus(userCredential.user.uid);
                         })
-                        .catch((error) => {
-                            console.error("❌ Ошибка входа:", error);
-                            let errorMessage = "Ошибка входа: ";
+                        .catch(function(error) {
+                            console.error("Ошибка входа:", error);
+                            var errorMessage = "Ошибка входа: ";
                             
                             switch(error.code) {
                                 case 'auth/invalid-email':
@@ -104,12 +111,40 @@ const firebaseConfig = {
                         });
                 }
 
+                // Проверка статуса администратора
+                function checkAdminStatus(userId) {
+                    db.collection('users').doc(userId).get()
+                        .then(function(doc) {
+                            if (doc.exists) {
+                                const userData = doc.data();
+                                isAdmin = userData.role === 'admin';
+                                
+                                if (isAdmin) {
+                                    console.log("Пользователь является администратором");
+                                    document.getElementById('admin-panel-btn').style.display = 'inline-block';
+                                } else {
+                                    console.log("Пользователь не является администратором");
+                                    document.getElementById('admin-panel-btn').style.display = 'none';
+                                    document.getElementById('admin-panel').style.display = 'none';
+                                }
+                            } else {
+                                console.log("Документ пользователя не найден");
+                                isAdmin = false;
+                            }
+                        })
+                        .catch(function(error) {
+                            console.error("Ошибка проверки статуса администратора:", error);
+                            isAdmin = false;
+                        });
+                }
+
                 // Функция регистрации
                 function signup() {
-                    console.log("📝 Вызов функции signup");
 
-
-const email = document.getElementById('email').value;
+> Roman:
+console.log("Вызов функции signup");
+                    
+                    const email = document.getElementById('email').value;
                     const password = document.getElementById('password').value;
                     
                     if (!email || !password) {
@@ -125,19 +160,20 @@ const email = document.getElementById('email').value;
                     showAuthMessage("Регистрация...", "success");
                     
                     auth.createUserWithEmailAndPassword(email, password)
-                        .then((userCredential) => {
+                        .then(function(userCredential) {
                             // Создаем запись о пользователе в Firestore
                             return db.collection('users').doc(userCredential.user.uid).set({
                                 email: email,
+                                role: 'user', // По умолчанию обычный пользователь
                                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
                             });
                         })
-                        .then(() => {
+                        .then(function() {
                             showAuthMessage("Регистрация успешна!", "success");
                         })
-                        .catch((error) => {
-                            console.error("❌ Ошибка регистрации:", error);
-                            let errorMessage = "Ошибка регистрации: ";
+                        .catch(function(error) {
+                            console.error("Ошибка регистрации:", error);
+                            var errorMessage = "Ошибка регистрации: ";
                             
                             switch(error.code) {
                                 case 'auth/email-already-in-use':
@@ -163,36 +199,99 @@ const email = document.getElementById('email').value;
                 // Функция выхода
                 function logout() {
                     auth.signOut()
-                        .then(() => {
-                            console.log("✅ Выход выполнен успешно");
+                        .then(function() {
+                            console.log("Выход выполнен успешно");
                             showAuthMessage("Вы вышли из системы", "success");
+                            isAdmin = false;
+                            document.getElementById('admin-panel-btn').style.display = 'none';
+                            document.getElementById('admin-panel').style.display = 'none';
                         })
-                        .catch((error) => {
-                            console.error("❌ Ошибка выхода:", error);
+                        .catch(function(error) {
+                            console.error("Ошибка выхода:", error);
                         });
                 }
 
+                // Переключение панели администратора
+                function toggleAdminPanel() {
+                    const adminPanel = document.getElementById('admin-panel');
+                    if (adminPanel.style.display === 'none') {
+                        adminPanel.style.display = 'block';
+                    } else {
+                        adminPanel.style.display = 'none';
+                    }
+                }
+
+                // Добавление нового занятия
+                function addNewClass(event) {
+                    event.preventDefault();
+
+> Roman:
+const title = document.getElementById('class-title').value;
+                    const description = document.getElementById('class-description').value;
+                    const date = document.getElementById('class-date').value;
+                    const time = document.getElementById('class-time').value;
+                    const duration = parseInt(document.getElementById('class-duration').value);
+                    const maxParticipants = parseInt(document.getElementById('class-max-participants').value);
+                    const instructor = document.getElementById('class-instructor').value;
+                    
+                    if (!title⠟⠟⠞⠞⠞⠵⠺⠺⠞!time⠺⠵⠵⠵⠟⠞⠵⠵⠺⠺⠟⠞⠞!maxParticipants || !instructor) {
+                        showAdminMessage("Заполните все обязательные поля", "error");
+                        return;
+                    }
+                    
+                    // Создаем объект даты из отдельных полей даты и времени
+                    const classDateTime = new Date(date + 'T' + time);
+                    
+                    showAdminMessage("Добавление занятия...", "success");
+                    
+                    db.collection('classes').add({
+                        title: title,
+                        description: description,
+                        date: classDateTime,
+                        duration: duration,
+                        maxParticipants: maxParticipants,
+                        currentParticipants: 0,
+                        instructor: instructor
+                    })
+                    .then(function(docRef) {
+                        console.log("Занятие добавлено с ID: ", docRef.id);
+                        showAdminMessage("Занятие успешно добавлено!", "success");
+                        
+                        // Очищаем форму
+                        document.getElementById('add-class-form').reset();
+                        
+                        // Обновляем календарь
+                        loadMonthClasses(currentMonth, currentYear);
+                    })
+                    .catch(function(error) {
+                        console.error("Ошибка добавления занятия: ", error);
+                        showAdminMessage("Ошибка при добавлении занятия: " + error.message, "error");
+                    });
+                }
+
                 // Проверка состояния аутентификации
-                auth.onAuthStateChanged((user) => {
+                auth.onAuthStateChanged(function(user) {
                     console.log("Состояние аутентификации изменено:", user);
                     if (user) {
                         currentUser = user;
-                        console.log("✅ Пользователь авторизован:", user.email);
+                        console.log("Пользователь авторизован:", user.email);
                         document.getElementById('auth-container').style.display = 'none';
                         document.getElementById('app-container').style.display = 'block';
+                        
+                        // Проверяем статус администратора
+                        checkAdminStatus(user.uid);
+                        
                         initCalendar();
                     } else {
                         currentUser = null;
-                        console.log("🔓 Пользователь не авторизован");
+                        console.log("Пользователь не авторизован");
                         document.getElementById('auth-container').style.display = 'block';
                         document.getElementById('app-container').style.display = 'none';
                     }
                 });
 
                 // Инициализация календаря
-
-
-function initCalendar() {
+                function initCalendar() {
                     renderCalendar(currentMonth, currentYear);
                     loadMonthClasses(currentMonth, currentYear);
                     
@@ -201,101 +300,96 @@ function initCalendar() {
                 }
 
                 // Отображение календаря
-                // Отображение календаря
-function renderCalendar(month, year) {
-    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
-                       "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
-    
-    // Исправлено: используем конкатенацию вместо шаблонной строки
-    document.getElementById('current-month-year').textContent = monthNames[month] + ' ' + year;
-    
-    const daysContainer = document.getElementById('calendar-days');
-    daysContainer.innerHTML = '';
-    
-    // Первый день месяца
-    const firstDay = new Date(year, month, 1);
-    // Последний день месяца
-    const lastDay = new Date(year, month + 1, 0);
-    // День недели первого дня месяца (0 - воскресенье, 1 - понедельник, ...)
-    const firstDayIndex = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
-    // Количество дней в месяце
-    const daysInMonth = lastDay.getDate();
-    
-    // Текущая дата
-    const today = new Date();
-    const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
-    
-    // Создаем дни из предыдущего месяца
-    const prevMonthLastDay = new Date(year, month, 0).getDate();
-    for (let i = 0; i < firstDayIndex; i++) {
-        const day = document.createElement('div');
-        day.className = 'day other-month';
-        // Исправлено: используем конкатенацию вместо шаблонной строки
-        day.innerHTML = '<div class="day-number">' + (prevMonthLastDay - firstDayIndex + i + 1) + '</div>';
-        daysContainer.appendChild(day);
-    }
-    
-    // Создаем дни текущего месяца
-    for (let i = 1; i <= daysInMonth; i++) {
-        const day = document.createElement('div');
-        day.className = 'day';
-        const date = new Date(year, month, i);
-        const dateStr = formatDate(date);
-        
-        // Проверяем, является ли день сегодняшним
-        if (isCurrentMonth && i === today.getDate()) {
-            day.classList.add('today');
-        }
-        
-        // Исправлено: используем конкатенацию вместо шаблонной строки
-        day.innerHTML = '<div class="day-number">' + i + '</div>';
-        
-        // Проверяем, есть ли занятия на эту дату
-        if (classesByDate[dateStr] && classesByDate[dateStr].length > 0) {
-            day.classList.add('has-classes');
-            const classPreview = classesByDate[dateStr][0];
-            // Исправлено: используем конкатенацию вместо шаблонной строки
-            day.innerHTML += '<div class="class-preview">' + classPreview.title + '</div>';
-            
-            if (classesByDate[dateStr].length > 1) {
-                // Исправлено: используем конкатенацию вместо шаблонной строки
-                day.innerHTML += '<div class="class-preview">+' + (classesByDate[dateStr].length - 1) + ' еще</div>';
-            }
-        }
-        
-        day.addEventListener('click', function() {
-            selectDate(date);
-        });
-        daysContainer.appendChild(day);
-    }
-    
-    // Создаем дни следующего месяца
-    const totalCells = 42; // 6 недель * 7 дней
-    const remainingCells = totalCells - (firstDayIndex + daysInMonth);
-    for (let i = 1; i <= remainingCells; i++) {
-        const day = document.createElement('div');
-        day.className = 'day other-month';
-        // Исправлено: используем конкатенацию вместо шаблонной строки
-        day.innerHTML = '<div class="day-number">' + i + '</div>';
-        daysContainer.appendChild(day);
-    }
-}
+                function renderCalendar(month, year) {
+                    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+                                       "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+
+> Roman:
+document.getElementById('current-month-year').textContent = monthNames[month] + ' ' + year;
+                    
+                    const daysContainer = document.getElementById('calendar-days');
+                    daysContainer.innerHTML = '';
+                    
+                    // Первый день месяца
+                    const firstDay = new Date(year, month, 1);
+                    // Последний день месяца
+                    const lastDay = new Date(year, month + 1, 0);
+                    // День недели первого дня месяца (0 - воскресенье, 1 - понедельник, ...)
+                    const firstDayIndex = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+                    // Количество дней в месяце
+                    const daysInMonth = lastDay.getDate();
+                    
+                    // Текущая дата
+                    const today = new Date();
+                    const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
+                    
+                    // Создаем дни из предыдущего месяца
+                    const prevMonthLastDay = new Date(year, month, 0).getDate();
+                    for (let i = 0; i < firstDayIndex; i++) {
+                        const day = document.createElement('div');
+                        day.className = 'day other-month';
+                        day.innerHTML = '<div class="day-number">' + (prevMonthLastDay - firstDayIndex + i + 1) + '</div>';
+                        daysContainer.appendChild(day);
+                    }
+                    
+                    // Создаем дни текущего месяца
+                    for (let i = 1; i <= daysInMonth; i++) {
+                        const day = document.createElement('div');
+                        day.className = 'day';
+                        const date = new Date(year, month, i);
+                        const dateStr = formatDate(date);
+                        
+                        // Проверяем, является ли день сегодняшним
+                        if (isCurrentMonth && i === today.getDate()) {
+                            day.classList.add('today');
+                        }
+                        
+                        day.innerHTML = '<div class="day-number">' + i + '</div>';
+                        
+                        // Проверяем, есть ли занятия на эту дату
+                        if (classesByDate[dateStr] && classesByDate[dateStr].length > 0) {
+                            day.classList.add('has-classes');
+                            const classPreview = classesByDate[dateStr][0];
+                            day.innerHTML += '<div class="class-preview">' + classPreview.title + '</div>';
+                            
+                            if (classesByDate[dateStr].length > 1) {
+                                day.innerHTML += '<div class="class-preview">+' + (classesByDate[dateStr].length - 1) + ' еще</div>';
+                            }
+                        }
+                        
+                        day.addEventListener('click', function() {
+                            selectDate(date);
+                        });
+                        daysContainer.appendChild(day);
+                    }
+                    
+                    // Создаем дни следующего месяца
+                    const totalCells = 42; // 6 недель * 7 дней
+                    const remainingCells = totalCells - (firstDayIndex + daysInMonth);
+                    for (let i = 1; i <= remainingCells; i++) {
+                        const day = document.createElement('div');
+                        day.className = 'day other-month';
+                        day.innerHTML = '<div class="day-number">' + i + '</div>';
+                        daysContainer.appendChild(day);
+                    }
+                }
 
                 // Загрузка занятий на месяц
                 function loadMonthClasses(month, year) {
                     const startDate = new Date(year, month, 1);
                     const endDate = new Date(year, month + 1, 0);
-                    
-                    console.log("Загрузка занятий с", startDate, "по", endDate);
+
+> Roman:
+console.log("Загрузка занятий с", startDate, "по", endDate);
                     
                     db.collection('classes')
                         .where('date', '>=', startDate)
                         .where('date', '<=', endDate)
                         .get()
-                        .then((querySnapshot) => {
+                        .then(function(querySnapshot) {
                             classesByDate = {};
                             
-                            querySnapshot.forEach((doc) => {
+                            querySnapshot.forEach(function(doc) {
                                 const classData = doc.data();
                                 const classDate = classData.date.toDate();
                                 const dateStr = formatDate(classDate);
@@ -313,7 +407,7 @@ function renderCalendar(month, year) {
                             console.log("Занятия загружены:", classesByDate);
                             renderCalendar(currentMonth, currentYear);
                         })
-                        .catch((error) => {
+                        .catch(function(error) {
                             console.error('Ошибка загрузки занятий:', error);
                         });
                 }
@@ -328,21 +422,20 @@ function renderCalendar(month, year) {
                     classesList.innerHTML = '';
                     
                     if (classesByDate[dateStr] && classesByDate[dateStr].length > 0) {
-                        classesByDate[dateStr].forEach((classData) => {
+                        classesByDate[dateStr].forEach(function(classData) {
                             const classDate = classData.date.toDate();
                             const isFull = classData.currentParticipants >= classData.maxParticipants;
                             
                             const classItem = document.createElement('div');
                             classItem.className = 'class-item';
-                            classItem.innerHTML = `
-                                <h4>${classData.title}</h4>
-                                <p>Время: ${classDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                                <p>Инструктор: ${classData.instructor}</p>
-                                <p>Места: ${classData.currentParticipants}/${classData.maxParticipants}</p>
-                                <button ${isFull ? 'disabled' : ''} onclick="openBookingModal('${classData.id}')">
-                                    ${isFull ? 'Мест нет' : 'Записаться'}
-                                </button>
-                            `;
+                            classItem.innerHTML = 
+                                '<h4>' + classData.title + '</h4>' +
+                                '<p>Время: ' + classDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + '</p>' +
+                                '<p>Инструктор: ' + classData.instructor + '</p>' +
+                                '<p>Места: ' + classData.currentParticipants + '/' + classData.maxParticipants + '</p>' +
+                                '<button ' + (isFull ? 'disabled' : '') + ' onclick="openBookingModal(\'' + classData.id + '\')">' +
+                                (isFull ? 'Мест нет' : 'Записаться') +
+                                '</button>';
                             
                             classesList.appendChild(classItem);
                         });
@@ -351,10 +444,7 @@ function renderCalendar(month, year) {
                     }
                     
                     // Прокручиваем к деталям дня
-                    document.getElementById('day-details').
-
-
-scrollIntoView({ behavior: 'smooth' });
+                    document.getElementById('day-details').scrollIntoView({ behavior: 'smooth' });
                 }
 
                 // Открытие модального окна для записи
@@ -362,22 +452,23 @@ scrollIntoView({ behavior: 'smooth' });
                     selectedClass = classId;
                     
                     db.collection('classes').doc(classId).get()
-                        .then((doc) => {
+                        .then(function(doc) {
                             if (!doc.exists) return;
                             
                             const classData = doc.data();
-                            const modalInfo = document.getElementById('modal-class-info');
+
+> Roman:
+const modalInfo = document.getElementById('modal-class-info');
                             
-                            modalInfo.innerHTML = `
-                                <h3>${classData.title}</h3>
-                                <p>Время: ${classData.date.toDate().toLocaleString()}</p>
-                                <p>Инструктор: ${classData.instructor}</p>
-                                <p>Места: ${classData.currentParticipants}/${classData.maxParticipants}</p>
-                            `;
+                            modalInfo.innerHTML = 
+                                '<h3>' + classData.title + '</h3>' +
+                                '<p>Время: ' + classData.date.toDate().toLocaleString() + '</p>' +
+                                '<p>Инструктор: ' + classData.instructor + '</p>' +
+                                '<p>Места: ' + classData.currentParticipants + '/' + classData.maxParticipants + '</p>';
                             
                             document.getElementById('booking-modal').style.display = 'block';
                         })
-                        .catch((error) => {
+                        .catch(function(error) {
                             console.error("Ошибка загрузки информации о занятии:", error);
                         });
                 }
@@ -392,7 +483,7 @@ scrollIntoView({ behavior: 'smooth' });
                         .where('classId', '==', selectedClass)
                         .where('status', '==', 'confirmed')
                         .get()
-                        .then((querySnapshot) => {
+                        .then(function(querySnapshot) {
                             if (!querySnapshot.empty) {
                                 alert('Вы уже записаны на это занятие!');
                                 return;
@@ -401,7 +492,7 @@ scrollIntoView({ behavior: 'smooth' });
                             // Проверяем, есть ли еще места
                             return db.collection('classes').doc(selectedClass).get();
                         })
-                        .then((doc) => {
+                        .then(function(doc) {
                             if (!doc.exists) return;
                             
                             const classData = doc.data();
@@ -430,14 +521,12 @@ scrollIntoView({ behavior: 'smooth' });
                             
                             return batch.commit();
                         })
-                        .then(() => {
+                        .then(function() {
                             alert('Вы успешно записаны на занятие!');
                             document.getElementById('booking-modal').style.display = 'none';
-
-
-loadMonthClasses(currentMonth, currentYear); // Обновляем список
+                            loadMonthClasses(currentMonth, currentYear); // Обновляем список
                         })
-                        .catch((error) => {
+                        .catch(function(error) {
                             console.error('Ошибка записи:', error);
                             alert('Ошибка записи на занятие: ' + error.message);
                         });
@@ -446,8 +535,9 @@ loadMonthClasses(currentMonth, currentYear); // Обновляем список
                 // Смена месяца
                 function changeMonth(direction) {
                     currentMonth += direction;
-                    
-                    if (currentMonth < 0) {
+
+> Roman:
+if (currentMonth < 0) {
                         currentMonth = 11;
                         currentYear--;
                     } else if (currentMonth > 11) {
@@ -481,16 +571,28 @@ loadMonthClasses(currentMonth, currentYear); // Обновляем список
 
                 // Инициализация при загрузке DOM
                 document.addEventListener('DOMContentLoaded', function() {
-                    console.log("✅ DOM полностью загружен");
+                    console.log("DOM полностью загружен");
                     
                     // Назначаем обработчики кнопок
                     document.getElementById('login-btn').addEventListener('click', login);
                     document.getElementById('signup-btn').addEventListener('click', signup);
                     document.getElementById('logout-btn').addEventListener('click', logout);
-                    document.getElementById('prev-month-btn').addEventListener('click', () => changeMonth(-1));
-                    document.getElementById('next-month-btn').addEventListener('click', () => changeMonth(1));
+                    document.getElementById('prev-month-btn').addEventListener('click', function() { changeMonth(-1); });
+                    document.getElementById('next-month-btn').addEventListener('click', function() { changeMonth(1); });
                     document.getElementById('today-btn').addEventListener('click', goToToday);
                     document.getElementById('confirm-booking').addEventListener('click', confirmBooking);
+                    document.getElementById('admin-panel-btn').addEventListener('click', toggleAdminPanel);
+                    document.getElementById('add-class-form').addEventListener('submit', addNewClass);
+                    
+                    // Устанавливаем сегодняшнюю дату в форму по умолчанию
+                    const today = new Date();
+                    const formattedDate = today.toISOString().split('T')[0];
+                    document.getElementById('class-date').value = formattedDate;
+                    
+                    // Устанавливаем время по умолчанию (ближайший час)
+                    const nextHour = new Date(today.getTime() + 60 * 60 * 1000);
+                    const formattedTime = nextHour.toTimeString().substr(0, 5);
+                    document.getElementById('class-time').value = formattedTime;
                     
                     // Закрытие модального окна
                     document.querySelector('.close').addEventListener('click', function() {
@@ -499,20 +601,19 @@ loadMonthClasses(currentMonth, currentYear); // Обновляем список
                     
                     // Закрытие модального окна при клике вне его
                     window.addEventListener('click', function(event) {
-                        const modal = document.getElementById('booking-modal');
-                        if (event.target === modal) {
-                            modal.style.display = 'none';
+                        if (event.target.classList.contains('modal')) {
+                            event.target.style.display = 'none';
                         }
                     });
                     
                     // Глобальные функции для использования в onclick
                     window.openBookingModal = openBookingModal;
                     
-                    console.log("✅ Обработчики событий назначены");
+                    console.log("Обработчики событий назначены");
                 });
 
             } catch (error) {
-                console.error("❌ Ошибка инициализации Firebase:", error);
-                showAuthMessage("Ошибка инициализации Firebase: " + error.message, "error");
+                console.error("Ошибка инициализации Firebase:", error);
+showAuthMessage("Ошибка инициализации Firebase: " + error.message, "error");
             }
         }
