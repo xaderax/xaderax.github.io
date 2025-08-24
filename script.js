@@ -1,12 +1,15 @@
 // Инициализация Firebase
+
 const firebaseConfig = {
-  apiKey: "ваш_apiKey",
-  authDomain: "ваш_проект.firebaseapp.com",
-  projectId: "ваш_проект",
-  storageBucket: "ваш_проект.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "ваш_appId"
+  apiKey: "AIzaSyCQTk07tMT8y7tYH0Tcz3xV747rJKBmfIE",
+  authDomain: "grandstep-2e1d8.firebaseapp.com",
+  projectId: "grandstep-2e1d8",
+  storageBucket: "grandstep-2e1d8.firebasestorage.app",
+  messagingSenderId: "307286256573",
+  appId: "1:307286256573:web:3d4ecaf42690e0da2c40d4",
+  measurementId: "G-5VYW104YG6"
 };
+
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
