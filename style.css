@@ -282,9 +282,23 @@
         }
 .cancel-btn {
     background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
 }
 
 .cancel-btn:hover {
     background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+}
+
+.class-item button {
+    margin-top: 10px;
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.class-item button:disabled {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    cursor: not-allowed;
 }
 
