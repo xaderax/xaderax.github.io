@@ -141,62 +141,61 @@ let userBookings = []; // Добавляем массив для хранени�
                 }
 
                 // Функция регистрации
-                function signup() {
-
-
-console.log("Вызов функции signup");
-                    
-                    const email = document.getElementById('email').value;
-                    const password = document.getElementById('password').value;
-                    
-                    if (!email || !password) {
-                        showAuthMessage("Введите email и пароль", "error");
-                        return;
-                    }
-                    
-                    if (password.length < 6) {
-                        showAuthMessage("Пароль должен содержать не менее 6 символов", "error");
-                        return;
-                    }
-                    
-                    showAuthMessage("Регистрация...", "success");
-                    
-                    auth.createUserWithEmailAndPassword(email, password)
-                        .then(function(userCredential) {
-                            // Создаем запись о пользователе в Firestore
-                            return db.collection('users').doc(userCredential.user.uid).set({
-                                email: email,
-                                role: 'user', // По умолчанию обычный пользователь
-                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                            });
-                        })
-                        .then(function() {
-                            showAuthMessage("Регистрация успешна!", "success");
-                        })
-                        .catch(function(error) {
-                            console.error("Ошибка регистрации:", error);
-                            var errorMessage = "Ошибка регистрации: ";
-                            
-                            switch(error.code) {
-                                case 'auth/email-already-in-use':
-                                    errorMessage += "Email уже используется";
-                                    break;
-                                case 'auth/invalid-email':
-                                    errorMessage += "Неверный формат email";
-                                    break;
-                                case 'auth/operation-not-allowed':
-                                    errorMessage += "Операция не разрешена";
-                                    break;
-                                case 'auth/weak-password':
-                                    errorMessage += "Пароль слишком простой";
-                                    break;
-                                default:
-                                    errorMessage += error.message;
-                            }
-                            
-                            showAuthMessage(errorMessage, "error");
-                        });
-                }
+                // Функция регистрации
+function signup() {
+    console.log("Вызов функции signup");
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    if (!email || !password) {
+        showAuthMessage("Введите email и пароль", "error");
+        return;
+    }
+    
+    if (password.length < 6) {
+        showAuthMessage("Пароль должен содержать не менее 6 символов", "error");
+        return;
+    }
+    
+    showAuthMessage("Регистрация...", "success");
+    
+    auth.createUserWithEmailAndPassword(email, password)
+        .then(function(userCredential) {
+            // Создаем запись о пользователе в Firestore
+            return db.collection('users').doc(userCredential.user.uid).set({
+                email: email,
+                role: 'user', // Устанавливаем роль по умолчанию
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        })
+        .then(function() {
+            showAuthMessage("Регистрация успешна!", "success");
+        })
+        .catch(function(error) {
+            console.error("Ошибка регистрации:", error);
+            let errorMessage = "Ошибка регистрации: ";
+            
+            switch(error.code) {
+                case 'auth/email-already-in-use':
+                    errorMessage += "Email уже используется";
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage += "Неверный формат email";
+                    break;
+                case 'auth/operation-not-allowed':
+                    errorMessage += "Операция не разрешена";
+                    break;
+                case 'auth/weak-password':
+                    errorMessage += "Пароль слишком простой";
+                    break;
+                default:
+                    errorMessage += error.message;
+            }
+            
+            showAuthMessage(errorMessage, "error");
+        });
+}
 
                 // Функция выхода
                 function logout() {
@@ -270,26 +269,7 @@ console.log("Вызов функции signup");
                     });
                 }
 
-                // Проверка состояния аутентификации
-                auth.onAuthStateChanged(function(user) {
-                    console.log("Состояние аутентификации изменено:", user);
-                    if (user) {
-                        currentUser = user;
-                        console.log("Пользователь авторизован:", user.email);
-                        document.getElementById('auth-container').style.display = 'none';
-                        document.getElementById('app-container').style.display = 'block';
-                        
-                        // Проверяем статус администратора
-                        checkAdminStatus(user.uid);
-                        
-                        initCalendar();
-                    } else {
-                        currentUser = null;
-                        console.log("Пользователь не авторизован");
-                        document.getElementById('auth-container').style.display = 'block';
-                        document.getElementById('app-container').style.display = 'none';
-                    }
-                });
+
 
                 // Инициализация календаря
                // Инициализация календаря
@@ -553,18 +533,85 @@ function cancelBooking(classId) {
             alert('Запись на занятие отменена!');
             
             // Мгновенно обновляем данные
-            updateClassData(classId, -1); // Уменьшаем счетчик на 1
-            updateUserBookings(classId, false); // Удаляем запись из бронирований пользователя
+            updateClassData(classId, -1);
+            updateUserBookings(classId, false);
             
             // Обновляем отображение
             selectDate(selectedDate);
         })
         .catch(function(error) {
             console.error('Ошибка отмены бронирования:', error);
-            alert('Ошибка отмены бронирования: ' + error.message);
+
+// Если ошибка связана с правами доступа
+            if (error.code === 'permission-denied') {
+                alert('Ошибка доступа. Пожалуйста, обратитесь к администратору.');
+            } else {
+                alert('Ошибка отмены бронирования: ' + error.message);
+            }
+        });
+}
+// Проверка прав доступа пользователя
+function checkUserPermissions() {
+    if (!currentUser) {
+        console.log("Пользователь не аутентифицирован");
+        return;
+    }
+    
+    console.log("ID пользователя:", currentUser.uid);
+    
+    // Проверяем наличие документа пользователя
+    db.collection('users').doc(currentUser.uid).get()
+        .then(function(doc) {
+            if (doc.exists) {
+                console.log("Данные пользователя:", doc.data());
+                
+                // Проверяем роль пользователя
+                const userData = doc.data();
+                if (userData.role) {
+                    console.log("Роль пользователя:", userData.role);
+                } else {
+                    console.log("Роль пользователя не установлена");
+                }
+            } else {
+                console.log("Документ пользователя не найден");
+            }
+        })
+        .catch(function(error) {
+            console.error("Ошибка загрузки данных пользователя:", error);
         });
 }
 
+// Проверка прав доступа к конкретному документу
+function testDocumentAccess(collectionName, docId) {
+    db.collection(collectionName).doc(docId).get()
+        .then(function(doc) {
+            console.log("Доступ к документу разрешен:", doc.exists);
+        })
+        .catch(function(error) {
+            console.error("Ошибка доступа к документу:", error);
+        });
+}
+// Проверка состояния аутентификации
+auth.onAuthStateChanged(function(user) {
+    console.log("Состояние аутентификации изменено:", user);
+    if (user) {
+        currentUser = user;
+        console.log("Пользователь авторизован:", user.email);
+        
+        // Проверяем права доступа
+        checkUserPermissions();
+        
+        document.getElementById('auth-container').style.display = 'none';
+        document.getElementById('app-container').style.display = 'block';
+        
+        initCalendar();
+    } else {
+        currentUser = null;
+        console.log("Пользователь не авторизован");
+        document.getElementById('auth-container').style.display = 'block';
+        document.getElementById('app-container').style.display = 'none';
+    }
+});
               // Мгновенное обновление данных занятия
 function updateClassData(classId, change) {
     // Находим занятие в кэше и обновляем счетчик
@@ -641,69 +688,71 @@ function openBookingModal(classId) {
                 // Подтверждение записи
 // Подтверждение записи через Cloud Function
 // Подтверждение записи
+// Подтверждение записи
 function confirmBooking() {
     if (!currentUser || !selectedClass) return;
     
-    // Проверяем, не записан ли уже пользователь
-    db.collection('bookings')
-        .where('userId', '==', currentUser.uid)
-        .where('classId', '==', selectedClass)
-        .where('status', '==', 'confirmed')
-        .get()
-        .then(function(querySnapshot) {
-            if (!querySnapshot.empty) {
-                alert('Вы уже записаны на это занятие!');
-                return;
-            }
-            
-            // Проверяем, есть ли еще места
-            return db.collection('classes').doc(selectedClass).get();
-        })
-        .then(function(doc) {
-            if (!doc.exists) return;
-            
-            const classData = doc.data();
-            if (classData.currentParticipants >= classData.maxParticipants) {
-                alert('К сожалению, места уже закончились!');
-                return;
-            }
-            
-            // Создаем запись и обновляем счетчик
-            const batch = db.batch();
-            
-            // Добавляем запись
-            const bookingRef = db.collection('bookings').doc();
-            batch.set(bookingRef, {
-                userId: currentUser.uid,
-                classId: selectedClass,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                status: 'confirmed'
-            });
-            
-            // Обновляем счетчик участников
-            const classRef = db.collection('classes').doc(selectedClass);
-            batch.update(classRef, {
-                currentParticipants: firebase.firestore.FieldValue.increment(1)
-            });
-            
-            return batch.commit();
-        })
+    // Создаем запись и обновляем счетчик
+    const batch = db.batch();
+    
+    // Добавляем запись о бронировании
+    const bookingRef = db.collection('bookings').doc();
+    batch.set(bookingRef, {
+        userId: currentUser.uid,
+        classId: selectedClass,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        status: 'confirmed'
+    });
+    
+    // Обновляем счетчик участников
+    const classRef = db.collection('classes').doc(selectedClass);
+    batch.update(classRef, {
+        currentParticipants: firebase.firestore.FieldValue.increment(1)
+    });
+    
+    batch.commit()
         .then(function() {
             alert('Вы успешно записаны на занятие!');
             document.getElementById('booking-modal').style.display = 'none';
             
             // Мгновенно обновляем данные
-            updateClassData(selectedClass, 1); // Увеличиваем счетчик на 1
-            updateUserBookings(selectedClass, true); // Добавляем запись в бронирования пользователя
+            updateClassData(selectedClass, 1);
+            updateUserBookings(selectedClass, true);
             
             // Обновляем отображение
             selectDate(selectedDate);
         })
         .catch(function(error) {
             console.error('Ошибка записи:', error);
-            alert('Ошибка записи на занятие: ' + error.message);
+            
+            // Если ошибка связана с правами доступа, проверяем наличие мест
+            if (error.code === 'permission-denied') {
+                checkClassAvailability(selectedClass);
+            } else {
+                alert('Ошибка записи на занятие: ' + error.message);
+            }
         });
 }
+
+// Проверка доступности мест
+function checkClassAvailability(classId) {
+    db.collection('classes').doc(classId).get()
+        .then(function(doc) {
+            if (!doc.exists) return;
+            
+            const classData = doc.data();
+            if (classData.currentParticipants >= classData.maxParticipants) {
+                alert('К сожалению, места уже закончились!');
+            } else {
+                alert('Ошибка доступа. Пожалуйста, попробуйте еще раз или обратитесь к администратору.');
+            }
+        })
+        .catch(function(error) {
+            console.error('Ошибка проверки доступности:', error);
+            alert('Ошибка проверки доступности мест: ' + error.message);
+        });
+}
+
 
               
               
