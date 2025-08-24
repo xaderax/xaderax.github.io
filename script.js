@@ -46,7 +46,7 @@ const firebaseConfig = {
                     const messageDiv = document.getElementById('auth-message');
                     if (messageDiv) {
                         messageDiv.textContent = message;
-                        messageDiv.className = message ${type};
+                    //    messageDiv.className = message ${type};
                     }
                 }
 
