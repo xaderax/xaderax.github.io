@@ -280,4 +280,11 @@
         .admin-form button:hover {
             background-color: #218838;
         }
+.cancel-btn {
+    background-color: #dc3545 !important;
+}
+
+.cancel-btn:hover {
+    background-color: #c82333 !important;
+}
 
