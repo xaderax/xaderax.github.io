@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Запись на занятия</title>
-    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="auth-container">
@@ -17,13 +16,15 @@
     </div>
 
     <div id="app-container" style="display:none">
-        <button onclick="logout()">Выйти</button>
-        <h1>Расписание занятий</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>Расписание занятий</h1>
+            <button id="logout-btn">Выйти</button>
+        </div>
         
         <div class="calendar-nav">
-            <button onclick="changeMonth(-1)">←</button>
+            <button id="prev-month-btn">←</button>
             <h2 id="current-month-year">Июнь 2023</h2>
-            <button onclick="changeMonth(1)">→</button>
+            <button id="next-month-btn">→</button>
         </div>
         
         <div class="calendar">
@@ -52,10 +53,9 @@
                 <button id="confirm-booking">Подтвердить запись</button>
             </div>
         </div>
-
-        <div id="debug-info" class="debug-info"></div>
     </div>
 
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
