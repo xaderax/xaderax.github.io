@@ -416,6 +416,7 @@ console.log("Загрузка занятий с", startDate, "по", endDate);
 
                 // Выбор даты
                 // Выбор даты
+// Выбор даты
 function selectDate(date) {
     selectedDate = date;
     const dateStr = formatDate(date);
@@ -426,13 +427,13 @@ function selectDate(date) {
     
     if (classesByDate[dateStr] && classesByDate[dateStr].length > 0) {
         // Загружаем бронирования пользователя для этой даты
-        loadUserBookingsForDate(dateStr).then(() => {
+        loadUserBookingsForDate(dateStr).then(function() {
             classesByDate[dateStr].forEach(function(classData) {
                 const classDate = classData.date.toDate();
                 const isFull = classData.currentParticipants >= classData.maxParticipants;
-                const isUserRegistered = userBookings.some(booking => 
-                    booking.classId === classData.id && booking.status === 'confirmed'
-                );
+                const isUserRegistered = userBookings.some(function(booking) {
+                    return booking.classId === classData.id && booking.status === 'confirmed';
+                });
                 
                 const classItem = document.createElement('div');
                 classItem.className = 'class-item';
@@ -464,7 +465,9 @@ function selectDate(date) {
     document.getElementById('day-details').scrollIntoView({ behavior: 'smooth' });
 }
 
+
               // Загрузка бронирований пользователя для определенной даты
+// Загрузка бронирований пользователя для определенной даты
 function loadUserBookingsForDate(dateStr) {
     if (!currentUser) return Promise.resolve();
     
@@ -474,16 +477,17 @@ function loadUserBookingsForDate(dateStr) {
         .get()
         .then(function(querySnapshot) {
             userBookings = [];
+            const promises = [];
+            
             querySnapshot.forEach(function(doc) {
                 const bookingData = doc.data();
-                // Получаем дату занятия из бронирования
-                return db.collection('classes').doc(bookingData.classId).get()
+                
+                const promise = db.collection('classes').doc(bookingData.classId).get()
                     .then(function(classDoc) {
                         if (classDoc.exists) {
                             const classData = classDoc.data();
                             const classDateStr = formatDate(classData.date.toDate());
                             
-                            // Если занятие на выбранную дату, добавляем в массив
                             if (classDateStr === dateStr) {
                                 userBookings.push({
                                     id: doc.id,
@@ -493,14 +497,20 @@ function loadUserBookingsForDate(dateStr) {
                             }
                         }
                     });
+                
+                promises.push(promise);
             });
-            return Promise.all(userBookingsPromises);
+            
+            return Promise.all(promises);
         })
         .catch(function(error) {
             console.error("Ошибка загрузки бронирований:", error);
+            return Promise.resolve();
         });
 }
+
               // Отмена бронирования
+// Отмена бронирования
 function cancelBooking(classId) {
     if (!currentUser) return;
     
@@ -549,6 +559,7 @@ function cancelBooking(classId) {
             alert('Ошибка отмены бронирования: ' + error.message);
         });
 }
+
                 // Открытие модального окна для записи
                 function openBookingModal(classId) {
                     selectedClass = classId;
