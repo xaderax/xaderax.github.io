@@ -509,50 +509,23 @@ function loadUserBookingsForDate(dateStr) {
               // Отмена бронирования
 // Отмена бронирования
 // Отмена бронирования
+// Отмена бронирования через Cloud Function
 function cancelBooking(classId) {
     if (!currentUser) return;
     
-    // Находим бронирование пользователя для этого занятия
-    db.collection('bookings')
-        .where('userId', '==', currentUser.uid)
-        .where('classId', '==', classId)
-        .where('status', '==', 'confirmed')
-        .get()
-        .then(function(querySnapshot) {
-            if (querySnapshot.empty) {
-                alert('Бронирование не найдено!');
-                return;
-            }
-            
-            // Подтверждение отмены
-            if (!confirm('Вы уверены, что хотите отменить запись на это занятие?')) {
-                return;
-            }
-            
-            const batch = db.batch();
-            
-            // Обновляем статус бронирования
-            const bookingId = querySnapshot.docs[0].id;
-            const bookingRef = db.collection('bookings').doc(bookingId);
-            batch.update(bookingRef, {
-                status: 'cancelled',
-                cancelledAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            // Уменьшаем счетчик участников
-            const classRef = db.collection('classes').doc(classId);
-            batch.update(classRef, {
-                currentParticipants: firebase.firestore.FieldValue.increment(-1)
-            });
-            
-            return batch.commit();
-        })
-        .then(function() {
-            alert('Запись на занятие отменена!');
+    if (!confirm('Вы уверены, что хотите отменить запись на это занятие?')) {
+        return;
+    }
+    
+    const cancelBooking = firebase.functions().httpsCallable('cancelBooking');
+    
+    cancelBooking({ classId: classId })
+        .then(function(result) {
+            alert(result.data.message);
             
             // Мгновенно обновляем данные
-            updateClassData(classId, -1); // Уменьшаем счетчик на 1
-            updateUserBookings(classId, false); // Удаляем запись из бронирований пользователя
+            updateClassData(classId, -1);
+            updateUserBookings(classId, false);
             
             // Обновляем отображение
             selectDate(selectedDate);
@@ -637,60 +610,20 @@ function openBookingModal(classId) {
 }
 
                 // Подтверждение записи
+// Подтверждение записи через Cloud Function
 function confirmBooking() {
     if (!currentUser || !selectedClass) return;
     
-    // Проверяем, не записан ли уже пользователь
-    db.collection('bookings')
-        .where('userId', '==', currentUser.uid)
-        .where('classId', '==', selectedClass)
-        .where('status', '==', 'confirmed')
-        .get()
-        .then(function(querySnapshot) {
-            if (!querySnapshot.empty) {
-                alert('Вы уже записаны на это занятие!');
-                return;
-            }
-            
-            // Проверяем, есть ли еще места
-            return db.collection('classes').doc(selectedClass).get();
-        })
-        .then(function(doc) {
-            if (!doc.exists) return;
-            
-            const classData = doc.data();
-            if (classData.currentParticipants >= classData.maxParticipants) {
-                alert('К сожалению, места уже закончились!');
-                return;
-            }
-            
-            // Создаем запись и обновляем счетчик
-            const batch = db.batch();
-            
-            // Добавляем запись
-            const bookingRef = db.collection('bookings').doc();
-            batch.set(bookingRef, {
-                userId: currentUser.uid,
-                classId: selectedClass,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                status: 'confirmed'
-            });
-            
-            // Обновляем счетчик участников
-            const classRef = db.collection('classes').doc(selectedClass);
-            batch.update(classRef, {
-                currentParticipants: firebase.firestore.FieldValue.increment(1)
-            });
-            
-            return batch.commit();
-        })
-        .then(function() {
-            alert('Вы успешно записаны на занятие!');
+    const bookClass = firebase.functions().httpsCallable('bookClass');
+    
+    bookClass({ classId: selectedClass })
+        .then(function(result) {
+            alert(result.data.message);
             document.getElementById('booking-modal').style.display = 'none';
             
             // Мгновенно обновляем данные
-            updateClassData(selectedClass, 1); // Увеличиваем счетчик на 1
-            updateUserBookings(selectedClass, true); // Добавляем запись в бронирования пользователя
+            updateClassData(selectedClass, 1);
+            updateUserBookings(selectedClass, true);
             
             // Обновляем отображение
             selectDate(selectedDate);
@@ -700,6 +633,117 @@ function confirmBooking() {
             alert('Ошибка записи на занятие: ' + error.message);
         });
 }
+
+              const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+admin.initializeApp();
+
+exports.bookClass = functions.https.onCall(async (data, context) => {
+  // Проверяем аутентификацию
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Требуется аутентификация');
+  }
+  
+  const { classId } = data;
+  const userId = context.auth.uid;
+  
+  try {
+    // Проверяем, не записан ли уже пользователь
+    const bookingsQuery = await admin.firestore().collection('bookings')
+      .where('userId', '==', userId)
+      .where('classId', '==', classId)
+      .where('status', '==', 'confirmed')
+      .get();
+    
+    if (!bookingsQuery.empty) {
+      throw new functions.https.HttpsError('already-exists', 'Вы уже записаны на это занятие');
+    }
+    
+    // Проверяем наличие свободных мест
+    const classRef = admin.firestore().collection('classes').doc(classId);
+    const classDoc = await classRef.get();
+    
+    if (!classDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Занятие не найдено');
+    }
+    
+    const classData = classDoc.data();
+    
+    if (classData.currentParticipants >= classData.maxParticipants) {
+      throw new functions.https.HttpsError('resource-exhausted', 'Мест нет');
+    }
+    
+    // Создаем бронирование и обновляем счетчик
+    const batch = admin.firestore().batch();
+    
+    // Добавляем запись о бронировании
+    const bookingRef = admin.firestore().collection('bookings').doc();
+    batch.set(bookingRef, {
+      userId: userId,
+      classId: classId,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      status: 'confirmed'
+    });
+    
+    // Обновляем счетчик участников
+    batch.update(classRef, {
+      currentParticipants: admin.firestore.FieldValue.increment(1)
+    });
+    
+    await batch.commit();
+    
+    return { success: true, message: 'Вы успешно записаны на занятие' };
+  } catch (error) {
+    console.error('Ошибка записи на занятие:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+              exports.cancelBooking = functions.https.onCall(async (data, context) => {
+  // Проверяем аутентификацию
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Требуется аутентификация');
+  }
+  
+  const { classId } = data;
+  const userId = context.auth.uid;
+  
+  try {
+    // Находим бронирование пользователя
+    const bookingsQuery = await admin.firestore().collection('bookings')
+      .where('userId', '==', userId)
+      .where('classId', '==', classId)
+      .where('status', '==', 'confirmed')
+      .get();
+    
+    if (bookingsQuery.empty) {
+      throw new functions.https.HttpsError('not-found', 'Бронирование не найдено');
+    }
+    
+    // Отменяем бронирование и обновляем счетчик
+    const batch = admin.firestore().batch();
+    
+    // Обновляем статус бронирования
+    const bookingId = bookingsQuery.docs[0].id;
+    const bookingRef = admin.firestore().collection('bookings').doc(bookingId);
+    batch.update(bookingRef, {
+      status: 'cancelled',
+      cancelledAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // Уменьшаем счетчик участников
+    const classRef = admin.firestore().collection('classes').doc(classId);
+    batch.update(classRef, {
+      currentParticipants: admin.firestore.FieldValue.increment(-1)
+    });
+    
+    await batch.commit();
+    
+    return { success: true, message: 'Запись на занятие отменена' };
+  } catch (error) {
+    console.error('Ошибка отмены бронирования:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
 
                 // Смена месяца
                 function changeMonth(direction) {
