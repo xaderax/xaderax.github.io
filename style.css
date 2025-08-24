@@ -1,230 +1,234 @@
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #f5f5f5;
-}
+ body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
 
-#auth-container, #app-container {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
+        #auth-container, #app-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
 
-input, button {
-    margin: 10px 0;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
 
-button {
-    background: #4CAF50;
-    color: white;
-    cursor: pointer;
-    border: none;
-}
+        input, button, select {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
 
-button:hover {
-    background: #45a049;
-}
+        button {
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s;
+        }
 
-.class-card {
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 15px;
-    margin: 10px 0;
-    background: white;
-}
+        button:hover {
+            background: #2980b9;
+        }
 
-.class-card h3 {
-    margin-top: 0;
-}
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
 
-.class-card button {
-    background: #2196F3;
-}
+        /* Стили для сообщений */
+        .message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
 
-.class-card button:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-}
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
 
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-}
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
 
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 500px;
-    border-radius: 10px;
-}
+        /* Стили для календаря */
+        .calendar-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
 
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-.calendar-nav {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 20px 0;
-}
+        .calendar-nav button {
+            margin: 0 15px;
+            padding: 5px 15px;
+        }
 
-.calendar-nav button {
-    margin: 0 15px;
-    padding: 5px 15px;
-}
+        .calendar {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
 
-.calendar {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-}
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: bold;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            background-color: #f8f9fa;
+        }
 
-.weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    text-align: center;
-    font-weight: bold;
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-}
+        .weekdays div {
+            padding: 10px;
+        }
 
-.weekdays div {
-    padding: 10px;
-}
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            padding: 10px;
+        }
 
-.days {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
-    padding: 10px;
-}
+        .day {
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: 10px;
+            min-height: 100px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
 
-.day {
-    border: 1px solid #eee;
-    border-radius: 5px;
-    padding: 10px;
-    min-height: 100px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
+        .day:hover {
+            background-color: #f9f9f9;
+        }
 
-.day:hover {
-    background-color: #f9f9f9;
-}
+        .day.other-month {
+            opacity: 0.4;
+            background-color: #f5f5f5;
+        }
 
-.day.other-month {
-    opacity: 0.4;
-}
+        .day.has-classes {
+            background-color: #e8f5e9;
+            border-color: #4caf50;
+        }
 
-.day.has-classes {
-    background-color: #e8f5e9;
-    border-color: #4caf50;
-}
+        .day.today {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+        }
 
-.day-number {
-    font-weight: bold;
-    margin-bottom: 5px;
-}
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
 
-.class-preview {
-    font-size: 0.8em;
-    background: #4caf50;
-    color: white;
-    padding: 2px 5px;
-    border-radius: 3px;
-    margin-top: 5px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
+        .class-preview {
+            font-size: 0.8em;
+            background: #4caf50;
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
-.day-details {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
+        /* Стили для деталей дня */
+        .day-details {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
 
-.class-item {
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 10px;
-    margin: 10px 0;
-}
+        .class-item {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
 
 .class-item h4 {
-    margin: 0 0 10px 0;
-}
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
 
-.class-item button {
-    background: #2196F3;
-}
+        .class-item button {
+            background: #2196F3;
+        }
 
-.class-item button:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-}
+        .class-item button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
 
-/* Адаптивность для мобильных устройств */
-@media (max-width: 768px) {
-    .day {
-        min-height: 70px;
-        padding: 5px;
-    }
-    
-    .class-preview {
-        display: none;
-    }
-    
-    .weekdays div {
-        padding: 5px;
-        font-size: 0.8em;
-    }
-}
-.message {
-    margin-top: 10px;
-    padding: 10px;
-    border-radius: 5px;
-}
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
 
-.message.error {
-    background-color: #ffebee;
-    color: #c62828;
-    border: 1px solid #ef9a9a;
-}
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            position: relative;
+        }
 
-.message.success {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #a5d6a7;
-}
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            cursor: pointer;
+        }
 
-.debug-info {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #f5f5f5;
-    border-radius: 5px;
-    font-family: monospace;
-    font-size: 14px;
-    white-space: pre-wrap;
-}
+        .close:hover {
+            color: #000;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .day {
+                min-height: 70px;
+                padding: 5px;
+            }
+            
+            .class-preview {
+                display: none;
+            }
+            
+            .weekdays div {
+                padding: 5px;
+                font-size: 0.8em;
+            }
+        }
