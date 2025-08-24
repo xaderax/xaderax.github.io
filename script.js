@@ -234,9 +234,10 @@ const title = document.getElementById('class-title').value;
                     const maxParticipants = parseInt(document.getElementById('class-max-participants').value);
                     const instructor = document.getElementById('class-instructor').value;
                     
-                    if (!title⠟⠟⠞⠞⠞⠵⠺⠺⠞!time⠺⠵⠵⠵⠟⠞⠵⠵⠺⠺⠟⠞⠞!maxParticipants || !instructor) {
+                    if (!title || !date ||  !time || !duration || !maxParticipants || !instructor) {
                         showAdminMessage("Заполните все обязательные поля", "error");
                         return;
+
                     }
                     
                     // Создаем объект даты из отдельных полей даты и времени
