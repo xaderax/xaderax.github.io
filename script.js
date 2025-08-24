@@ -201,78 +201,85 @@ function initCalendar() {
                 }
 
                 // Отображение календаря
-                function renderCalendar(month, year) {
-                    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
-                                       "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
-                    
-                    document.getElementById('current-month-year').textContent = ${monthNames[month]} ${year};
-                    
-                    const daysContainer = document.getElementById('calendar-days');
-                    daysContainer.innerHTML = '';
-                    
-                    // Первый день месяца
-                    const firstDay = new Date(year, month, 1);
-                    // Последний день месяца
-                    const lastDay = new Date(year, month + 1, 0);
-                    // День недели первого дня месяца (0 - воскресенье, 1 - понедельник, ...)
-                    const firstDayIndex = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
-                    // Количество дней в месяце
-                    const daysInMonth = lastDay.getDate();
-                    
-                    // Текущая дата
-                    const today = new Date();
-                    const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
-                    
-                    // Создаем дни из предыдущего месяца
-                    const prevMonthLastDay = new Date(year, month, 0).getDate();
-                    for (let i = 0; i < firstDayIndex; i++) {
-                        const day = document.createElement('div');
-                        day.className = 'day other-month';
-                        day.innerHTML = <div class="day-number">${prevMonthLastDay - firstDayIndex + i + 1}</div>;
-                        daysContainer.appendChild(day);
-                    }
-                    
-                    // Создаем дни текущего месяца
-                    for (let i = 1; i <= daysInMonth; i++) {
-                        const day = document.createElement('div');
-                        day.className = 'day';
-                        const date = new Date(year, month, i);
-                        const dateStr = formatDate(date);
-                        
-                        // Проверяем, является ли день сегодняшним
-                        if (isCurrentMonth && i === today.getDate()) {
-                            day.classList.add('today');
-                        }
-                        
-                        day.innerHTML = <div class="day-number">${i}</div>;
-                        
-                        // Проверяем, есть ли занятия на эту дату
-                        if (classesByDate[dateStr] && classesByDate[dateStr].length > 0) {
-                            day.classList.add('has-classes');
-                            const classPreview = classesByDate[dateStr][0];
-                            day.innerHTML += <div class="class-preview">${classPreview.title}</div>;
-                            
-                            if (classesByDate[dateStr].length > 1) {
-                                day.innerHTML += <div class="class-preview">+${classesByDate[dateStr].length - 1} еще</div>;
-                            }
-                        }
-                        
-                        day.addEventListener('click', () => selectDate(date));
-                        daysContainer.appendChild(day);
-                    }
-                    
-                    // Создаем дни следующего месяца
-                    const totalCells = 42; // 6 недель * 7 дней
-                    const remainingCells = totalCells - (firstDayIndex + daysInMonth);
-                    for (let i = 1; i <= remainingCells; i++) {
-
-
-const day = document.createElement('div');
-                        day.className = 'day other-month';
-                        day.innerHTML = <div class="day-number">${i}</div>;
-                        daysContainer.appendChild(day);
-                    }
-                }
+                // Отображение календаря
+function renderCalendar(month, year) {
+    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+                       "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+    
+    // Исправлено: используем конкатенацию вместо шаблонной строки
+    document.getElementById('current-month-year').textContent = monthNames[month] + ' ' + year;
+    
+    const daysContainer = document.getElementById('calendar-days');
+    daysContainer.innerHTML = '';
+    
+    // Первый день месяца
+    const firstDay = new Date(year, month, 1);
+    // Последний день месяца
+    const lastDay = new Date(year, month + 1, 0);
+    // День недели первого дня месяца (0 - воскресенье, 1 - понедельник, ...)
+    const firstDayIndex = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+    // Количество дней в месяце
+    const daysInMonth = lastDay.getDate();
+    
+    // Текущая дата
+    const today = new Date();
+    const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
+    
+    // Создаем дни из предыдущего месяца
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = 0; i < firstDayIndex; i++) {
+        const day = document.createElement('div');
+        day.className = 'day other-month';
+        // Исправлено: используем конкатенацию вместо шаблонной строки
+        day.innerHTML = '<div class="day-number">' + (prevMonthLastDay - firstDayIndex + i + 1) + '</div>';
+        daysContainer.appendChild(day);
+    }
+    
+    // Создаем дни текущего месяца
+    for (let i = 1; i <= daysInMonth; i++) {
+        const day = document.createElement('div');
+        day.className = 'day';
+        const date = new Date(year, month, i);
+        const dateStr = formatDate(date);
+        
+        // Проверяем, является ли день сегодняшним
+        if (isCurrentMonth && i === today.getDate()) {
+            day.classList.add('today');
+        }
+        
+        // Исправлено: используем конкатенацию вместо шаблонной строки
+        day.innerHTML = '<div class="day-number">' + i + '</div>';
+        
+        // Проверяем, есть ли занятия на эту дату
+        if (classesByDate[dateStr] && classesByDate[dateStr].length > 0) {
+            day.classList.add('has-classes');
+            const classPreview = classesByDate[dateStr][0];
+            // Исправлено: используем конкатенацию вместо шаблонной строки
+            day.innerHTML += '<div class="class-preview">' + classPreview.title + '</div>';
+            
+            if (classesByDate[dateStr].length > 1) {
+                // Исправлено: используем конкатенацию вместо шаблонной строки
+                day.innerHTML += '<div class="class-preview">+' + (classesByDate[dateStr].length - 1) + ' еще</div>';
+            }
+        }
+        
+        day.addEventListener('click', function() {
+            selectDate(date);
+        });
+        daysContainer.appendChild(day);
+    }
+    
+    // Создаем дни следующего месяца
+    const totalCells = 42; // 6 недель * 7 дней
+    const remainingCells = totalCells - (firstDayIndex + daysInMonth);
+    for (let i = 1; i <= remainingCells; i++) {
+        const day = document.createElement('div');
+        day.className = 'day other-month';
+        // Исправлено: используем конкатенацию вместо шаблонной строки
+        day.innerHTML = '<div class="day-number">' + i + '</div>';
+        daysContainer.appendChild(day);
+    }
+}
 
                 // Загрузка занятий на месяц
                 function loadMonthClasses(month, year) {
