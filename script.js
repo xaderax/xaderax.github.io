@@ -417,6 +417,7 @@ console.log("Загрузка занятий с", startDate, "по", endDate);
                 // Выбор даты
                 // Выбор даты
 // Выбор даты
+// Выбор даты
 function selectDate(date) {
     selectedDate = date;
     const dateStr = formatDate(date);
@@ -426,36 +427,33 @@ function selectDate(date) {
     classesList.innerHTML = '';
     
     if (classesByDate[dateStr] && classesByDate[dateStr].length > 0) {
-        // Загружаем бронирования пользователя для этой даты
-        loadUserBookingsForDate(dateStr).then(function() {
-            classesByDate[dateStr].forEach(function(classData) {
-                const classDate = classData.date.toDate();
-                const isFull = classData.currentParticipants >= classData.maxParticipants;
-                const isUserRegistered = userBookings.some(function(booking) {
-                    return booking.classId === classData.id && booking.status === 'confirmed';
-                });
-                
-                const classItem = document.createElement('div');
-                classItem.className = 'class-item';
-                
-                let buttonHTML;
-                if (isUserRegistered) {
-                    buttonHTML = '<button onclick="cancelBooking(\'' + classData.id + '\')" class="cancel-btn">Отписаться</button>';
-                } else if (isFull) {
-                    buttonHTML = '<button disabled>Мест нет</button>';
-                } else {
-                    buttonHTML = '<button onclick="openBookingModal(\'' + classData.id + '\')">Записаться</button>';
-                }
-                
-                classItem.innerHTML = 
-                    '<h4>' + classData.title + '</h4>' +
-                    '<p>Время: ' + classDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + '</p>' +
-                    '<p>Инструктор: ' + classData.instructor + '</p>' +
-                    '<p>Места: ' + classData.currentParticipants + '/' + classData.maxParticipants + '</p>' +
-                    buttonHTML;
-                
-                classesList.appendChild(classItem);
+        classesByDate[dateStr].forEach(function(classData) {
+            const classDate = classData.date.toDate();
+            const isFull = classData.currentParticipants >= classData.maxParticipants;
+            const isUserRegistered = userBookings.some(function(booking) {
+                return booking.classId === classData.id && booking.status === 'confirmed';
             });
+            
+            const classItem = document.createElement('div');
+            classItem.className = 'class-item';
+            
+            let buttonHTML;
+            if (isUserRegistered) {
+                buttonHTML = '<button onclick="cancelBooking(\'' + classData.id + '\')" class="cancel-btn">Отписаться</button>';
+            } else if (isFull) {
+                buttonHTML = '<button disabled>Мест нет</button>';
+            } else {
+                buttonHTML = '<button onclick="openBookingModal(\'' + classData.id + '\')">Записаться</button>';
+            }
+            
+            classItem.innerHTML = 
+                '<h4>' + classData.title + '</h4>' +
+                '<p>Время: ' + classDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + '</p>' +
+                '<p>Инструктор: ' + classData.instructor + '</p>' +
+                '<p>Места: ' + classData.currentParticipants + '/' + classData.maxParticipants + '</p>' +
+                buttonHTML;
+            
+            classesList.appendChild(classItem);
         });
     } else {
         classesList.innerHTML = '<p>На выбранную дату занятий нет.</p>';
@@ -464,7 +462,6 @@ function selectDate(date) {
     // Прокручиваем к деталям дня
     document.getElementById('day-details').scrollIntoView({ behavior: 'smooth' });
 }
-
 
               // Загрузка бронирований пользователя для определенной даты
 // Загрузка бронирований пользователя для определенной даты
@@ -511,6 +508,7 @@ function loadUserBookingsForDate(dateStr) {
 
               // Отмена бронирования
 // Отмена бронирования
+// Отмена бронирования
 function cancelBooking(classId) {
     if (!currentUser) return;
     
@@ -551,7 +549,12 @@ function cancelBooking(classId) {
         })
         .then(function() {
             alert('Запись на занятие отменена!');
-            // Обновляем отображение занятий
+            
+            // Мгновенно обновляем данные
+            updateClassData(classId, -1); // Уменьшаем счетчик на 1
+            updateUserBookings(classId, false); // Удаляем запись из бронирований пользователя
+            
+            // Обновляем отображение
             selectDate(selectedDate);
         })
         .catch(function(error) {
@@ -560,90 +563,143 @@ function cancelBooking(classId) {
         });
 }
 
+              // Мгновенное обновление данных занятия
+function updateClassData(classId, change) {
+    // Находим занятие в кэше и обновляем счетчик
+    for (const date in classesByDate) {
+        const classes = classesByDate[date];
+        for (let i = 0; i < classes.length; i++) {
+            if (classes[i].id === classId) {
+                classes[i].currentParticipants += change;
+                break;
+            }
+        }
+    }
+}
+
+// Мгновенное обновление бронирований пользователя
+function updateUserBookings(classId, isAdding) {
+    if (isAdding) {
+        // Добавляем запись о бронировании
+        userBookings.push({
+            classId: classId,
+            status: 'confirmed'
+        });
+    } else {
+        // Удаляем запись о бронировании
+        userBookings = userBookings.filter(booking => booking.classId !== classId);
+    }
+}
+
                 // Открытие модального окна для записи
-                function openBookingModal(classId) {
-                    selectedClass = classId;
-                    
-                    db.collection('classes').doc(classId).get()
-                        .then(function(doc) {
-                            if (!doc.exists) return;
-                            
-                            const classData = doc.data();
-
-
-const modalInfo = document.getElementById('modal-class-info');
-                            
-                            modalInfo.innerHTML = 
-                                '<h3>' + classData.title + '</h3>' +
-                                '<p>Время: ' + classData.date.toDate().toLocaleString() + '</p>' +
-                                '<p>Инструктор: ' + classData.instructor + '</p>' +
-                                '<p>Места: ' + classData.currentParticipants + '/' + classData.maxParticipants + '</p>';
-                            
-                            document.getElementById('booking-modal').style.display = 'block';
-                        })
-                        .catch(function(error) {
-                            console.error("Ошибка загрузки информации о занятии:", error);
-                        });
-                }
+function openBookingModal(classId) {
+    selectedClass = classId;
+    
+    // Используем актуальные данные из кэша
+    for (const date in classesByDate) {
+        const classes = classesByDate[date];
+        for (let i = 0; i < classes.length; i++) {
+            if (classes[i].id === classId) {
+                const classData = classes[i];
+                const modalInfo = document.getElementById('modal-class-info');
+                
+                modalInfo.innerHTML = 
+                    '<h3>' + classData.title + '</h3>' +
+                    '<p>Время: ' + classData.date.toDate().toLocaleString() + '</p>' +
+                    '<p>Инструктор: ' + classData.instructor + '</p>' +
+                    '<p>Места: ' + classData.currentParticipants + '/' + classData.maxParticipants + '</p>';
+                
+                document.getElementById('booking-modal').style.display = 'block';
+                return;
+            }
+        }
+    }
+    
+    // Если не нашли в кэше, загружаем из базы
+    db.collection('classes').doc(classId).get()
+        .then(function(doc) {
+            if (!doc.exists) return;
+            
+            const classData = doc.data();
+            const modalInfo = document.getElementById('modal-class-info');
+            
+            modalInfo.innerHTML = 
+                '<h3>' + classData.title + '</h3>' +
+                '<p>Время: ' + classData.date.toDate().toLocaleString() + '</p>' +
+                '<p>Инструктор: ' + classData.instructor + '</p>' +
+                '<p>Места: ' + classData.currentParticipants + '/' + classData.maxParticipants + '</p>';
+            
+            document.getElementById('booking-modal').style.display = 'block';
+        })
+        .catch(function(error) {
+            console.error("Ошибка загрузки информации о занятии:", error);
+        });
+}
 
                 // Подтверждение записи
-                function confirmBooking() {
-                    if (!currentUser || !selectedClass) return;
-                    
-                    // Проверяем, не записан ли уже пользователь
-                    db.collection('bookings')
-                        .where('userId', '==', currentUser.uid)
-                        .where('classId', '==', selectedClass)
-                        .where('status', '==', 'confirmed')
-                        .get()
-                        .then(function(querySnapshot) {
-                            if (!querySnapshot.empty) {
-                                alert('Вы уже записаны на это занятие!');
-                                return;
-                            }
-                            
-                            // Проверяем, есть ли еще места
-                            return db.collection('classes').doc(selectedClass).get();
-                        })
-                        .then(function(doc) {
-                            if (!doc.exists) return;
-                            
-                            const classData = doc.data();
-                            if (classData.currentParticipants >= classData.maxParticipants) {
-                                alert('К сожалению, места уже закончились!');
-                                return;
-                            }
-                            
-                            // Создаем запись и обновляем счетчик
-                            const batch = db.batch();
-                            
-                            // Добавляем запись
-                            const bookingRef = db.collection('bookings').doc();
-                            batch.set(bookingRef, {
-                                userId: currentUser.uid,
-                                classId: selectedClass,
-                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                                status: 'confirmed'
-                            });
-                            
-                            // Обновляем счетчик участников
-                            const classRef = db.collection('classes').doc(selectedClass);
-                            batch.update(classRef, {
-                                currentParticipants: firebase.firestore.FieldValue.increment(1)
-                            });
-                            
-                            return batch.commit();
-                        })
-                        .then(function() {
-                            alert('Вы успешно записаны на занятие!');
-                            document.getElementById('booking-modal').style.display = 'none';
-                            loadMonthClasses(currentMonth, currentYear); // Обновляем список
-                        })
-                        .catch(function(error) {
-                            console.error('Ошибка записи:', error);
-                            alert('Ошибка записи на занятие: ' + error.message);
-                        });
-                }
+function confirmBooking() {
+    if (!currentUser || !selectedClass) return;
+    
+    // Проверяем, не записан ли уже пользователь
+    db.collection('bookings')
+        .where('userId', '==', currentUser.uid)
+        .where('classId', '==', selectedClass)
+        .where('status', '==', 'confirmed')
+        .get()
+        .then(function(querySnapshot) {
+            if (!querySnapshot.empty) {
+                alert('Вы уже записаны на это занятие!');
+                return;
+            }
+            
+            // Проверяем, есть ли еще места
+            return db.collection('classes').doc(selectedClass).get();
+        })
+        .then(function(doc) {
+            if (!doc.exists) return;
+            
+            const classData = doc.data();
+            if (classData.currentParticipants >= classData.maxParticipants) {
+                alert('К сожалению, места уже закончились!');
+                return;
+            }
+            
+            // Создаем запись и обновляем счетчик
+            const batch = db.batch();
+            
+            // Добавляем запись
+            const bookingRef = db.collection('bookings').doc();
+            batch.set(bookingRef, {
+                userId: currentUser.uid,
+                classId: selectedClass,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                status: 'confirmed'
+            });
+            
+            // Обновляем счетчик участников
+            const classRef = db.collection('classes').doc(selectedClass);
+            batch.update(classRef, {
+                currentParticipants: firebase.firestore.FieldValue.increment(1)
+            });
+            
+            return batch.commit();
+        })
+        .then(function() {
+            alert('Вы успешно записаны на занятие!');
+            document.getElementById('booking-modal').style.display = 'none';
+            
+            // Мгновенно обновляем данные
+            updateClassData(selectedClass, 1); // Увеличиваем счетчик на 1
+            updateUserBookings(selectedClass, true); // Добавляем запись в бронирования пользователя
+            
+            // Обновляем отображение
+            selectDate(selectedDate);
+        })
+        .catch(function(error) {
+            console.error('Ошибка записи:', error);
+            alert('Ошибка записи на занятие: ' + error.message);
+        });
+}
 
                 // Смена месяца
                 function changeMonth(direction) {
