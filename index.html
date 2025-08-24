@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="auth-container">
+     <div id="auth-container">
         <h2>Вход / Регистрация</h2>
         <input type="email" id="email" placeholder="Email" value="test@example.com">
         <input type="password" id="password" placeholder="Пароль" value="password123">
@@ -19,7 +19,57 @@
     <div id="app-container" style="display:none">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h1>Расписание занятий</h1>
-            <button id="logout-btn">Выйти</button>
+            <div>
+                <button id="admin-panel-btn" style="display:none;">Панель администратора</button>
+                <button id="logout-btn">Выйти</button>
+            </div>
+        </div>
+        
+        <!-- Панель администратора (изначально скрыта) -->
+        <div id="admin-panel" class="admin-panel" style="display:none;">
+            <h3>Панель администратора</h3>
+            <form id="add-class-form" class="admin-form">
+                <div class="full-width">
+                    <label for="class-title">Название занятия:</label>
+                    <input type="text" id="class-title" required>
+                </div>
+                
+                <div class="full-width">
+                    <label for="class-description">Описание:</label>
+                    <textarea id="class-description" rows="3"></textarea>
+                </div>
+                
+                <div>
+                    <label for="class-date">Дата:</label>
+                    <input type="date" id="class-date" required>
+                </div>
+                
+                <div>
+                    <label for="class-time">Время:</label>
+                    <input type="time" id="class-time" required>
+                </div>
+                
+                <div>
+                    <label for="class-duration">Продолжительность (мин):</label>
+                    <input type="number" id="class-duration" min="1" value="60" required>
+                </div>
+                
+                <div>
+                    <label for="class-max-participants">Макс. участников:</label>
+                    <input type="number" id="class-max-participants" min="1" value="10" required>
+                </div>
+                
+                <div>
+                    <label for="class-instructor">Инструктор:</label>
+                    <input type="text" id="class-instructor" required>
+                </div>
+                
+                <div class="full-width">
+                    <button type="submit">Добавить занятие</button>
+                </div>
+
+</form>
+            <div id="admin-message" class="message"></div>
         </div>
         
         <div class="calendar-nav">
