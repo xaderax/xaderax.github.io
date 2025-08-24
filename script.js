@@ -10,11 +10,10 @@ const firebaseConfig = {
   measurementId: "G-5VYW104YG6"
 }
 
-        // Проверка загрузки скрипта
+// Проверка загрузки скрипта
         console.log("🚀 Script.js загружен успешно");
 
-
-// Проверка загрузки Firebase
+        // Проверка загрузки Firebase
         if (typeof firebase === 'undefined') {
             console.error("❌ Firebase не загружен. Проверьте подключение к интернету и CDN ссылки.");
             showAuthMessage("Ошибка загрузки Firebase. Проверьте подключение к интернету.", "error");
@@ -46,7 +45,7 @@ const firebaseConfig = {
                     const messageDiv = document.getElementById('auth-message');
                     if (messageDiv) {
                         messageDiv.textContent = message;
-                    //    messageDiv.className = message ${type};
+                        messageDiv.className = message ${type};
                     }
                 }
 
@@ -99,11 +98,10 @@ const firebaseConfig = {
                 // Функция регистрации
                 function signup() {
                     console.log("📝 Вызов функции signup");
-                    
-                    const email = document.getElementById('email').value;
 
 
-const password = document.getElementById('password').value;
+const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
                     
                     if (!email || !password) {
                         showAuthMessage("Введите email и пароль", "error");
@@ -183,11 +181,14 @@ const password = document.getElementById('password').value;
                 });
 
                 // Инициализация календаря
-                function initCalendar() {
+
+
+function initCalendar() {
                     renderCalendar(currentMonth, currentYear);
-
-
-loadMonthClasses(currentMonth, currentYear);
+                    loadMonthClasses(currentMonth, currentYear);
+                    
+                    // Автоматически выбираем сегодняшнюю дату
+                    selectDate(new Date());
                 }
 
                 // Отображение календаря
@@ -255,13 +256,13 @@ loadMonthClasses(currentMonth, currentYear);
                     const totalCells = 42; // 6 недель * 7 дней
                     const remainingCells = totalCells - (firstDayIndex + daysInMonth);
                     for (let i = 1; i <= remainingCells; i++) {
-                        const day = document.createElement('div');
+
+
+const day = document.createElement('div');
                         day.className = 'day other-month';
                         day.innerHTML = <div class="day-number">${i}</div>;
                         daysContainer.appendChild(day);
-
-
-}
+                    }
                 }
 
                 // Загрузка занятий на месяц
@@ -334,17 +335,17 @@ loadMonthClasses(currentMonth, currentYear);
                     }
                     
                     // Прокручиваем к деталям дня
-                    document.getElementById('day-details').scrollIntoView({ behavior: 'smooth' });
+                    document.getElementById('day-details').
+
+
+scrollIntoView({ behavior: 'smooth' });
                 }
 
                 // Открытие модального окна для записи
                 function openBookingModal(classId) {
                     selectedClass = classId;
                     
-                    db.collection('classes').doc(classId).
-
-
-get()
+                    db.collection('classes').doc(classId).get()
                         .then((doc) => {
                             if (!doc.exists) return;
                             
@@ -416,15 +417,15 @@ get()
                         .then(() => {
                             alert('Вы успешно записаны на занятие!');
                             document.getElementById('booking-modal').style.display = 'none';
-                            loadMonthClasses(currentMonth, currentYear); // Обновляем список
+
+
+loadMonthClasses(currentMonth, currentYear); // Обновляем список
                         })
                         .catch((error) => {
                             console.error('Ошибка записи:', error);
                             alert('Ошибка записи на занятие: ' + error.message);
                         });
-
-
-}
+                }
 
                 // Смена месяца
                 function changeMonth(direction) {
@@ -440,6 +441,17 @@ get()
                     
                     renderCalendar(currentMonth, currentYear);
                     loadMonthClasses(currentMonth, currentYear);
+                }
+
+                // Переход к текущему месяцу
+                function goToToday() {
+                    const today = new Date();
+                    currentMonth = today.getMonth();
+                    currentYear = today.getFullYear();
+                    
+                    renderCalendar(currentMonth, currentYear);
+                    loadMonthClasses(currentMonth, currentYear);
+                    selectDate(today);
                 }
 
                 // Вспомогательная функция для форматирования даты
@@ -461,6 +473,7 @@ get()
                     document.getElementById('logout-btn').addEventListener('click', logout);
                     document.getElementById('prev-month-btn').addEventListener('click', () => changeMonth(-1));
                     document.getElementById('next-month-btn').addEventListener('click', () => changeMonth(1));
+                    document.getElementById('today-btn').addEventListener('click', goToToday);
                     document.getElementById('confirm-booking').addEventListener('click', confirmBooking);
                     
                     // Закрытие модального окна
@@ -487,3 +500,4 @@ get()
                 showAuthMessage("Ошибка инициализации Firebase: " + error.message, "error");
             }
         }
+
