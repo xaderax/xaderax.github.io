@@ -9,7 +9,6 @@ const firebaseConfig = {
   appId: "1:307286256573:web:3d4ecaf42690e0da2c40d4",
   measurementId: "G-5VYW104YG6"
 }
-
 // Проверка загрузки скрипта
         console.log("🚀 Script.js загружен успешно");
 
@@ -500,4 +499,3 @@ loadMonthClasses(currentMonth, currentYear); // Обновляем список
                 showAuthMessage("Ошибка инициализации Firebase: " + error.message, "error");
             }
         }
-
