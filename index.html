@@ -9,10 +9,11 @@
 <body>
     <div id="auth-container">
         <h2>Вход / Регистрация</h2>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Пароль">
-        <button onclick="login()">Войти</button>
-        <button onclick="signup()">Зарегистрироваться</button>
+        <input type="email" id="email" placeholder="Email" value="test@example.com">
+        <input type="password" id="password" placeholder="Пароль" value="password123">
+        <button id="login-btn">Войти</button>
+        <button id="signup-btn">Зарегистрироваться</button>
+        <div id="auth-message" class="message"></div>
     </div>
 
     <div id="app-container" style="display:none">
@@ -51,6 +52,8 @@
                 <button id="confirm-booking">Подтвердить запись</button>
             </div>
         </div>
+
+        <div id="debug-info" class="debug-info"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
