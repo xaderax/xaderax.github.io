@@ -39,12 +39,22 @@ const firebaseConfig = {
                 let classesByDate = {};
 
                 // Показ сообщений аутентификации
+                // function showAuthMessage(message, type) {
+                //    console.log(`[AUTH ${type}] ${message}`);
+                //   const messageDiv = document.getElementById('auth-message');
+                //    if (messageDiv) {
+                //        messageDiv.textContent = message;
+                //        messageDiv.className = message ${type};
+                //    }
+                //}
+              // Показ сообщений аутентификации (ИСПРАВЛЕННАЯ ФУНКЦИЯ)
                 function showAuthMessage(message, type) {
-                    console.log(`[AUTH ${type}] ${message}`);
+                    console.log("[AUTH] " + message + " (" + type + ")");
                     const messageDiv = document.getElementById('auth-message');
                     if (messageDiv) {
                         messageDiv.textContent = message;
-                        messageDiv.className = message ${type};
+                        // Исправлено: используем конкатенацию вместо шаблонных строк
+                        messageDiv.className = 'message ' + type;
                     }
                 }
 
