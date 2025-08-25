@@ -619,7 +619,7 @@ async function getClassParticipants(classId) {
         const usersData = await getUsersData(userIds);
         
         // Фильтруем null значения и возвращаем массив с именами и фамилиями
-        return usersData.filter(user => user !== null)
+       return usersData.filter(user => user !== null)
                .map(user => ({
                    name: user.name || 'Имя не указано',
                    surname: user.surname || 'Фамилия не указана'
