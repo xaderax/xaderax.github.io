@@ -8,13 +8,20 @@
 </head>
 <body>
      <div id="auth-container">
-        <h2>Вход / Регистрация</h2>
-        <input type="email" id="email" placeholder="Email" value="test@example.com">
-        <input type="password" id="password" placeholder="Пароль" value="password123">
-        <button id="login-btn">Войти</button>
-        <button id="signup-btn">Зарегистрироваться</button>
-        <div id="auth-message" class="message"></div>
+    <h2>Вход / Регистрация</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Пароль">
+    
+    <!-- Поля для имени и фамилии (видимые только при регистрации) -->
+    <div id="name-fields" style="display: none;">
+        <input type="text" id="name" placeholder="Имя">
+        <input type="text" id="surname" placeholder="Фамилия">
     </div>
+    
+    <button id="login-btn">Войти</button>
+    <button id="signup-btn">Зарегистрироваться</button>
+    <div id="auth-message" class="message"></div>
+</div>
 
     <div id="app-container" style="display:none">
         <div style="display: flex; justify-content: space-between; align-items: center;">
