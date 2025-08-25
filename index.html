@@ -7,29 +7,29 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-     <div id="auth-container">
-    <h2>Вход / Регистрация</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Пароль">
-    
-    <!-- Поля для имени и фамилии (видимые только при регистрации) -->
-    <div id="name-fields" style="display: none;">
-        <input type="text" id="name" placeholder="Имя">
-        <input type="text" id="surname" placeholder="Фамилия">
+    <div id="auth-container">
+        <h2>Вход / Регистрация</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Пароль">
+        
+        <!-- Поля для имени и фамилии (видимые только при регистрации) -->
+        <div id="name-fields" style="display: none;">
+            <input type="text" id="name" placeholder="Имя" required>
+            <input type="text" id="surname" placeholder="Фамилия" required>
+        </div>
+        
+        <button id="login-btn">Войти</button>
+        <button id="signup-btn" style="display: none;">Зарегистрироваться</button>
+        <div id="auth-message" class="message"></div>
+        
+        <p id="register-link">Нет аккаунта? <a href="#" id="show-signup">Зарегистрироваться</a></p>
+        <p id="login-link" style="display: none;">Уже есть аккаунт? <a href="#" id="show-login">Войти</a></p>
     </div>
-    
-    <button id="login-btn">Войти</button>
-    <button id="signup-btn">Зарегистрироваться</button>
-    <div id="auth-message" class="message"></div>
-</div>
 
     <div id="app-container" style="display:none">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h1>Расписание занятий</h1>
-            <div>
-                <button id="admin-panel-btn" style="display:none;">Панель администратора</button>
-                <button id="logout-btn">Выйти</button>
-            </div>
+            <button id="logout-btn">Выйти</button>
         </div>
         
         <!-- Панель администратора (изначально скрыта) -->
@@ -74,8 +74,7 @@
                 <div class="full-width">
                     <button type="submit">Добавить занятие</button>
                 </div>
-
-</form>
+            </form>
             <div id="admin-message" class="message"></div>
         </div>
         
@@ -84,6 +83,7 @@
             <h2 id="current-month-year"></h2>
             <button id="next-month-btn">→</button>
             <button id="today-btn">Сегодня</button>
+            <button id="admin-panel-btn" style="display:none;">Панель администратора</button>
         </div>
         
         <div class="calendar">
@@ -118,6 +118,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
     <script src="script.js"></script>
 </body>
 </html>
