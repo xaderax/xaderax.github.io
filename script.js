@@ -589,11 +589,15 @@ function loadUserBookingsForDate(dateStr) {
 // Отмена бронирования через Cloud Function
 // Отмена бронирования
 // Отмена бронирования
+// Отмена бронирования
 async function cancelBooking(classId) {
-  if (!currentUser) return;
+  if (!currentUser) {
+    alert('Для отмены записи необходимо авторизоваться');
+    return;
+  }
   
   try {
-    // Находим бронирование пользователя
+    // Находим бронирование пользователя для этого занятия
     const bookingQuery = await db.collection('bookings')
       .where('userId', '==', currentUser.uid)
       .where('classId', '==', classId)
@@ -624,7 +628,13 @@ async function cancelBooking(classId) {
     selectDate(selectedDate);
   } catch (error) {
     console.error('Ошибка отмены бронирования:', error);
-    alert('Ошибка отмены бронирования: ' + error.message);
+    
+    // Проверяем тип ошибки
+    if (error.code === 'permission-denied') {
+      alert('Ошибка доступа. У вас нет прав для отмены этой записи.');
+    } else {
+      alert('Ошибка отмены бронирования: ' + error.message);
+    }
   }
 }
 // Проверка прав доступа пользователя
