@@ -267,23 +267,41 @@ function invalidateParticipantsCache(classId = null) {
 }
 
 // Получение количества участников для нескольких занятий
+// Получение количества участников для нескольких занятий
 async function getParticipantsCountForClasses(classIds) {
   try {
-    const snapshot = await db.collection('bookings')
-      .where('classId', 'in', classIds)
-      .where('status', '==', 'confirmed')
-      .get();
-    
     const counts = {};
-    snapshot.forEach(doc => {
-      const booking = doc.data();
-      counts[booking.classId] = (counts[booking.classId] || 0) + 1;
+    const promises = [];
+    
+    // Создаем промисы для каждого занятия
+    classIds.forEach(classId => {
+      const promise = db.collection('bookings')
+        .where('classId', '==', classId)
+        .where('status', '==', 'confirmed')
+        .get()
+        .then(snapshot => {
+          counts[classId] = snapshot.size;
+        })
+        .catch(error => {
+          console.error(`Ошибка получения количества для занятия ${classId}:`, error);
+          counts[classId] = 0;
+        });
+      
+      promises.push(promise);
     });
     
+    // Ждем завершения всех запросов
+    await Promise.all(promises);
     return counts;
   } catch (error) {
-    console.error('Ошибка получения количества участников:', error);
-    return {};
+    console.error('Общая ошибка получения количества участников:', error);
+    
+    // В случае ошибки возвращаем все нули
+    const counts = {};
+    classIds.forEach(classId => {
+      counts[classId] = 0;
+    });
+    return counts;
   }
 }
                 // Добавление нового занятия
