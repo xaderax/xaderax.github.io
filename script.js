@@ -159,18 +159,44 @@ function signup() {
     }
     
     showAuthMessage("Регистрация...", "success");
-    
+    const usersCache = {};
+
+// Получение данных пользователей по их ID
+async function getUsersData(userIds) {
+    try {
+        // Фильтруем ID, которые уже есть в кэше
+        const uncachedIds = userIds.filter(id => !usersCache[id]);
+        
+        if (uncachedIds.length > 0) {
+            // Ограничиваем количество ID для запроса (Firestore ограничение - 10)
+            const batchIds = uncachedIds.slice(0, 10);
+            
+            const usersSnapshot = await db.collection('users')
+                .where(firebase.firestore.FieldPath.documentId(), 'in', batchIds)
+                .get();
+            
+            usersSnapshot.forEach(doc => {
+                usersCache[doc.id] = doc.data();
+            });
+        }
+        
+        // Возвращаем данные для всех запрошенных ID
+        return userIds.map(id => usersCache[id] || null);
+    } catch (error) {
+        console.error('Ошибка получения данных пользователей:', error);
+        return userIds.map(() => null);
+    }
+}
     auth.createUserWithEmailAndPassword(email, password)
-        .then(function(userCredential) {
-            // Создаем запись о пользователе в Firestore
+        .then((userCredential) => {
+            // Создаем запись о пользователе с именем и фамилией
             return db.collection('users').doc(userCredential.user.uid).set({
                 email: email,
-                role: 'user', // Устанавливаем роль по умолчанию
+                name: name,
+                surname: surname,
+                role: 'user',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-        })
-        .then(function() {
-            showAuthMessage("Регистрация успешна!", "success");
         })
         .catch(function(error) {
             console.error("Ошибка регистрации:", error);
@@ -493,52 +519,115 @@ async function loadMonthClasses(month, year) {
 // Выбор даты
 // Выбор даты
 // Выбор даты
+// Выбор даты
 async function selectDate(date) {
-  selectedDate = date;
-  const dateStr = formatDate(date);
-  document.getElementById('selected-date').textContent = dateStr;
-  
-  const classesList = document.getElementById('classes-list');
-  classesList.innerHTML = '';
-  
-  if (classesByDate[dateStr] && classesByDate[dateStr].length > 0) {
-    // Загружаем актуальные данные о бронированиях пользователя
-    await loadUserBookingsForDate(dateStr);
+    selectedDate = date;
+    const dateStr = formatDate(date);
+    document.getElementById('selected-date').textContent = dateStr;
     
-    classesByDate[dateStr].forEach(classData => {
-      const classDate = classData.date.toDate();
-      const isFull = classData.currentParticipants >= classData.maxParticipants;
-      const isUserRegistered = userBookings.some(booking => 
-        booking.classId === classData.id && booking.status === 'confirmed'
-      );
-      
-      const classItem = document.createElement('div');
-      classItem.className = 'class-item';
-      
-      let buttonHTML;
-      if (isUserRegistered) {
-        buttonHTML = '<button onclick="cancelBooking(\'' + classData.id + '\')" class="cancel-btn">Отписаться</button>';
-      } else if (isFull) {
-        buttonHTML = '<button disabled>Мест нет</button>';
-      } else {
-        buttonHTML = '<button onclick="openBookingModal(\'' + classData.id + '\')">Записаться</button>';
-      }
-      
-      classItem.innerHTML = 
-        '<h4>' + classData.title + '</h4>' +
-        '<p>Время: ' + classDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + '</p>' +
-        '<p>Инструктор: ' + classData.instructor + '</p>' +
-        '<p>Места: ' + classData.currentParticipants + '/' + classData.maxParticipants + '</p>' +
-        buttonHTML;
-      
-      classesList.appendChild(classItem);
+    const classesList = document.getElementById('classes-list');
+    classesList.innerHTML = '';
+    
+    if (classesByDate[dateStr] && classesByDate[dateStr].length > 0) {
+        // Загружаем бронирования пользователя для этой даты
+        await loadUserBookingsForDate(dateStr);
+        
+        // Для каждого занятия загружаем список участников
+        for (const classData of classesByDate[dateStr]) {
+            const classDate = classData.date.toDate();
+            const isFull = classData.currentParticipants >= classData.maxParticipants;
+            const isUserRegistered = userBookings.some(booking => 
+                booking.classId === classData.id && booking.status === 'confirmed'
+            );
+            
+            // Загружаем список участников этого занятия
+            const participants = await getClassParticipants(classData.id);
+            
+            const classItem = document.createElement('div');
+            classItem.className = 'class-item';
+            
+            let buttonHTML;
+            if (isUserRegistered) {
+                buttonHTML = '<button onclick="cancelBooking(\'' + classData.id + '\')" class="cancel-btn">Отписаться</button>';
+            } else if (isFull) {
+                buttonHTML = '<button disabled>Мест нет</button>';
+            } else {
+                buttonHTML = '<button onclick="openBookingModal(\'' + classData.id + '\')">Записаться</button>';
+            }
+            
+            // Формируем HTML для списка участников
+            let participantsHTML = '';
+            if (participants.length > 0) {
+    participantsHTML = '<div class="participants-list">';
+    participantsHTML += '<strong onclick="toggleParticipants(this)">Записались (' + participants.length + ')</strong>';
+    participantsHTML += '<ul style="display: none;">';
+    participants.forEach(user => {
+        participantsHTML += `<li>${user.name} ${user.surname}</li>`;
     });
-  } else {
-    classesList.innerHTML = '<p>На выбранную дату занятий нет.</p>';
-  }
-  
-  // Прокручиваем к деталям дня
-  document.getElementById('day-details').scrollIntoView({ behavior: 'smooth' });
+    participantsHTML += '</ul>';
+    participantsHTML += '</div>';
+}
+            
+            classItem.innerHTML = 
+                '<h4>' + classData.title + '</h4>' +
+                '<p>Время: ' + classDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + '</p>' +
+                '<p>Инструктор: ' + classData.instructor + '</p>' +
+                '<p>Места: ' + classData.currentParticipants + '/' + classData.maxParticipants + '</p>' +
+                participantsHTML +
+                buttonHTML;
+            
+            classesList.appendChild(classItem);
+        }
+    } else {
+        classesList.innerHTML = '<p>На выбранную дату занятий нет.</p>';
+    }
+    
+    // Прокручиваем к деталям дня
+    document.getElementById('day-details').scrollIntoView({ behavior: 'smooth' });
+}
+// Функция для скрытия/показа списка участников
+function toggleParticipants(element) {
+    const list = element.nextElementSibling;
+    if (list.style.display === 'none') {
+        list.style.display = 'block';
+        element.textContent = element.textContent.replace('▶', '▼');
+    } else {
+        list.style.display = 'none';
+        element.textContent = element.textContent.replace('▼', '▶');
+    }
+}
+// Получение списка участников занятия
+async function getClassParticipants(classId) {
+    try {
+        const snapshot = await db.collection('bookings')
+            .where('classId', '==', classId)
+            .where('status', '==', 'confirmed')
+            .get();
+        
+        if (snapshot.empty) {
+            return [];
+        }
+        
+        // Получаем ID всех пользователей, записавшихся на занятие
+        const userIds = [];
+        snapshot.forEach(doc => {
+            const booking = doc.data();
+            userIds.push(booking.userId);
+        });
+        
+        // Получаем данные этих пользователей
+        const usersData = await getUsersData(userIds);
+        
+        // Фильтруем null значения и возвращаем массив с именами и фамилиями
+        return usersData.filter(user => user !== null)
+               .map(user => ({
+                   name: user.name || 'Имя не указано',
+                   surname: user.surname || 'Фамилия не указана'
+               }));
+    } catch (error) {
+        console.error('Ошибка получения участников занятия:', error);
+        return [];
+    }
 }
               // Загрузка бронирований пользователя для определенной даты
 // Загрузка бронирований пользователя для определенной даты
